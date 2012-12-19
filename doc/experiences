@@ -1,0 +1,41 @@
+24-07-2006
+===========
+-mfast-math does not play well with -O1-3
+-Os does not play well with sse code.
+
+18-07-2006
+==========
+The reason for the note on 19-08-2005 is that mangled name of functions
+depends on some attribute such as  __declspec(dllexport) and __cdecl.
+This is the reason why we can't use AC_CHECK_LIB for functions declared
+as dllexport. Linking fails in the above case.
+
+19-08-2005
+==========
+When compiling a program with the function "xyz" on cygwin
+        - if we use the -mno-cygwin flag it is refrenced as __img__xyz@Q.
+        - else we reference it as _xyz
+  this works i think when things are declared as __declspec(dllimport)
+
+used the following in ltmain.sh to get things to run under mingw
+#if defined (S_IXOTH)
+      ((st.st_mode & S_IXOTH) == S_IXOTH) ||
+#endif
+#if defined (S_IXGRP)
+       ((st.st_mode & S_IXGRP) == S_IXGRP) ||
+#endif
+       ((st.st_mode & S_IXUSR) == S_IXUSR)))
+
+
+18-07-2005:
+===========
+
+When graphics library (gd) was installed with cygwin a dll cyggd-2.dll was
+installed in /usr/bin. The gnu linker (ld) that comes with cygwin is supposed
+to expect an argument --dll-search-prefix that defaults to `cyg' for cygwin
+installations.
+
+My gcc installation on cygwin is currently broken (at least the -mno-cygwin flag
+is), and the linker can not find the above dll. Worked around it by makeing a
+symbolic link `libgd.dll' in /usr/lib.
+

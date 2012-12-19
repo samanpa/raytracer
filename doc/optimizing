@@ -1,0 +1,23 @@
+- use half floats, fixed point
+- normals can be approximate
+- use fast sqrt
+- use the gpu
+- bitblt
+
+-Memory
+  -use half floats
+
+
+--------------------
+learn about mmap
+--------------------
+http://kerneltrap.org/node/5584#comment
+
+slab allocator
+--------------
+http://citeseer.ist.psu.edu/cache/papers/cs/8756/http:zSzzSzluthien.nuclecu.unam.mxzSz~miguelzSzbonwick.pdf/bonwick94slab.pdf
+
+http://www.berthels.co.uk/exmap
+
+http://blogs.gnome.org/view/timj/2005/12/02/0
+
