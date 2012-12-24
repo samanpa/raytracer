@@ -1,14 +1,7 @@
 #include <iostream>
 #include "scene.h"
-#include <time.h>
 #include "parser.h"
 #include "io.h"
-
-static uint64_t gettime() {
-  struct timespec ts;
-  clock_gettime(CLOCK_REALTIME, &ts);
-  return ts.tv_sec * 1000 * 1000 * 1000 +  ts.tv_nsec;
-}
 
 using namespace std;
 
@@ -26,13 +19,10 @@ int main(int argc, char **argv, char **environ) {
 
 	scene.getCamera().getAngle() = 60;
 
-	uint64_t start = gettime();
 	scene.draw(canvas);
-	uint64_t end   = gettime();
-
 	cout << "Draw took "
-	     << (end - start) / canvas.getHeight() / canvas.getWidth() /1000.
-	     << "us per pixel"
+	     << scene._intersectCost.val / scene._intersectCost.cnt
+	     << "cycles per pixel"
 	     << endl;
 	scene.save(canvas, "image.png");
 

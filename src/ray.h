@@ -7,8 +7,8 @@ class ray {
 public:
 	vec3& O() { return _orig; }
 	vec3& D() { return _dir; }
+	unsigned int _prim;
 	float tfar;
-	float t;
 	float u;
 	float v;
 private:

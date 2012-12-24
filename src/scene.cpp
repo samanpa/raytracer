@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <cmath>
 
+
 using namespace std;
 
 canvas::canvas(short height, short width) {
@@ -42,15 +43,19 @@ void scene::draw(canvas& canvas) {
 			ray.D() *= 1/ray.D().getMagnitude();
 			ray.tfar = 3.3e38f;
 			
-			for (auto& t : _triangles)
-				if (t.intersect(ray)) {
+			for (unsigned int p = 0; p < _accels.size(); ++p) {
+				ticks start = getticks();
+				bool  hit   = _accels[p].intersect(p, ray);
+				ticks end = getticks();
+				_intersectCost.inc(end - start);
+				if (hit) {
 					canvas(i,j).setRed(0.5);
 					canvas(i,j).setGreen(0.5);
 					canvas(i,j).setBlue(0.5);
 				}
+			}
 			pos += right;
 		}
-		//cout << endl;
 	}
 }
 

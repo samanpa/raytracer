@@ -29,7 +29,7 @@ color {
         return COLOR;
 }
 
-faces {
+faces|face_indices {
 	return FACES;
 }
 
@@ -45,8 +45,16 @@ location {
 	return LOCATION;
 }
 
-mesh {
+mesh|kmesh {
 	return MESH;
+}
+
+material {
+	 return MATERIAL;
+}
+
+normals {
+	return NORMALS;
 }
 
 vertices {

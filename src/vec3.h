@@ -20,6 +20,10 @@ public:
 		_v[0] = v._v[0]; _v[1] = v._v[1]; _v[2] = v._v[2];
 	}
 
+	vec3(const vec3& v) {
+		_v[0] = v._v[0]; _v[1] = v._v[1]; _v[2] = v._v[2];
+	}
+
 	vec3(float x, float y, float z) {
 		_v[0] = x; _v[1] = y; _v[2] = z; 
 	}

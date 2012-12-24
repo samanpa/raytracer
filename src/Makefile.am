@@ -10,7 +10,7 @@ CLEANFILES              =  lexer.cc
 
 libbp_ray_a_CXXFLAGS 	= $(common_CXXFLAGS)
 libbp_ray_a_SOURCES	= lexer.ll parser.cpp io.cpp \
-			triangle.cpp ray.cpp scene.cpp 
+			triangle.cpp triangle_barycentric.cpp ray.cpp scene.cpp 
 
 banna_CXXFLAGS 		= $(common_CXXFLAGS)
 banna_SOURCES 		= banna.cpp

@@ -20,6 +20,12 @@ static void report_error(const string& msg) {
 
 #define CHECK(TOK, msg) CHECK1(bplex_lex(), TOK, msg)
 
+static bool readInt(unsigned int& val) {
+	CHECK(NUM, " Expecting integer ");
+        val = bplex_lval.val;
+        return true;
+}
+
 static bool readInt(int& val) {
 	CHECK(NUM, " Expecting integer ");
         val = bplex_lval.val;
@@ -67,11 +73,33 @@ static bool parseVertices(vector<vec3> &vertices) {
 	CHECK(LBRACE, "expecting {");
 	if (!readInt(numVertices))
 		return false;
-
-	while (numVertices-- > 0) {
+	
+	vertices.resize(numVertices);
+	for (int i = 0; i < numVertices; i++) {
 		vec3 v;
 		if (!readVector(v)) return false;
-		vertices.emplace_back(v[0], v[1], v[2]);
+		vertices[i] = vec3(v[0], v[1], v[2]);
+	}
+	CHECK(RBRACE, "expecting }");
+	return true;
+}
+
+static bool parseNormals(scene &scene, vector<vec3> &vertices) {
+	unsigned int numNormals;
+	CHECK(LBRACE, "expecting {");
+	if (!readInt(numNormals))
+		return false;
+
+	if (numNormals != vertices.size()) {
+		report_error("number of vertices and normals don't match .");
+		cerr << " num vertices " << vertices.size() 
+		     << " num normals  " << numNormals
+		     << endl;
+	}
+	while (numNormals-- > 0) {
+		vec3 v;
+		if (!readVector(v)) return false;
+		scene.addNormal(v);
 	}
 	CHECK(RBRACE, "expecting }");
 	return true;
@@ -100,6 +128,13 @@ static bool parseFaces(scene& scene, vector<vec3> &vertices) {
 	return true;
 }
 
+static bool parseMaterial(scene& scene) {
+	CHECK(LBRACE, "expecting {");
+	CHECK(IDENTIFIER, " expecing identifier");
+	CHECK(RBRACE, "expecting }");
+	return true;
+}
+
 static bool parseMesh(scene& scene) {
 	vector<vec3> vertices;
 
@@ -113,6 +148,12 @@ static bool parseMesh(scene& scene) {
 			break;
 		case FACES:
 			if (!parseFaces(scene, vertices)) return false;
+			break;
+		case NORMALS:
+			if (!parseNormals(scene, vertices)) return false;
+			break;
+		case MATERIAL:
+			if (!parseMaterial(scene)) return false;
 			break;
 		case RBRACE:
 			return true;
