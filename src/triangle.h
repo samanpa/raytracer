@@ -9,10 +9,10 @@ public:
 
 	bool intersect(ray& ray);
 private:
+	int   k_plane; //projection plane
 	vec3  _p0;
 	float _nu;
 	float _nv;
-	int   k_plane; //projection plane
 	float _area;
 	float _au;
 	float _av;

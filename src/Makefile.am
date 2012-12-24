@@ -3,12 +3,16 @@ EXTRA_DIST 	= ply2mesh
 bin_PROGRAMS	= banna
 lib_LIBRARIES	= libbp_ray.a
 
-common_CFLAGS 	= -g -Wall -Wimplicit -pedantic -O3 -pipe -std=gnu1x -march=native
+common_CXXFLAGS = -g -Wall -pedantic -O3 -pipe -march=native \
+	-std=gnu++0x
 
-libbp_ray_a_CFLAGS 	= $(common_CFLAGS)
-libbp_ray_a_SOURCES	= ray.cpp scene.cpp
+CLEANFILES              =  lexer.cc 
 
-banna_CFLAGS  		= $(common_CFLAGS)
+libbp_ray_a_CXXFLAGS 	= $(common_CXXFLAGS)
+libbp_ray_a_SOURCES	= lexer.ll parser.cpp io.cpp \
+			triangle.cpp ray.cpp scene.cpp 
+
+banna_CXXFLAGS 		= $(common_CXXFLAGS)
 banna_SOURCES 		= banna.cpp
 banna_LDADD 		= libbp_ray.a
 banna_LDFLAGS 		= -lgd -lGL -lglut

@@ -1,7 +1,11 @@
 #include "scene.h"
+#include "ray.h"
 #include <iostream>
 #include <gd.h>
 #include <stdio.h>
+#include <cmath>
+
+using namespace std;
 
 canvas::canvas(short height, short width) {
 	_colors = new color*[height];
@@ -15,11 +19,38 @@ canvas::canvas(short height, short width) {
 }
 
 void scene::draw(canvas& canvas) {
-	for (int i = 0; i < canvas.getHeight(); ++i) {
+	vec3 dir  = _camera.getLookAt() - _camera.getLocation();
+	float mag = dir.getMagnitude();
+	//assume magnitude of direction vector is normalized
+	float leftstep = ::tan(_camera.getAngle() * M_PI / 360.) 
+		/ (canvas.getWidth() - 1) * 2.;
+	float downstep = (leftstep * canvas.getHeight()) / canvas.getWidth();
+	vec3 left = vec3::cross(_camera.getUp(), dir);
+	vec3 left_top = _camera.getLocation() + dir + left + _camera.getUp();
+	vec3 down(_camera.getUp()[0]*-downstep,
+		  _camera.getUp()[1]*-downstep,
+		  _camera.getUp()[2]*-downstep);
+	vec3 right(left[0]*-leftstep,
+		   left[1]*-leftstep,
+		   left[2]*-leftstep);
+	ray ray;
+	ray.O() = _camera.getLocation();
+	for (int i = 0; i < canvas.getHeight() ; ++i) {
+		vec3 pos(left_top + (down * i));
 		for (int j = 0; j < canvas.getWidth(); ++j) {
-			canvas(i,j).setRed((i+0.)/canvas.getHeight());
-			canvas(i,j).setGreen((j+0.)/canvas.getWidth());
+			ray.D() = pos - ray.O();
+			ray.D() *= 1/ray.D().getMagnitude();
+			ray.tfar = 3.3e38f;
+			
+			for (auto& t : _triangles)
+				if (t.intersect(ray)) {
+					canvas(i,j).setRed(0.5);
+					canvas(i,j).setGreen(0.5);
+					canvas(i,j).setBlue(0.5);
+				}
+			pos += right;
 		}
+		//cout << endl;
 	}
 }
 
@@ -40,4 +71,5 @@ bool scene::save(canvas& canvas, const char *filename) {
 	gdImagePng(image, file);
 	gdImageDestroy(image);
 	fclose(file);
+	return true;
 }

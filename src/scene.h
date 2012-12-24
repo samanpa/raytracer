@@ -1,25 +1,11 @@
 #ifndef BPRAY_SCENE_H
 #define BPRAY_SCENE_H
 
+#include "color.h"
 #include "camera.h"
+#include "triangle.h"
+#include <vector>
 
-struct color {
-	float getRed() { return _rgb[0]; }
-	float getGreen() { return _rgb[1]; }
-	float getBlue() { return _rgb[2]; }
-
-	void setRed(float r) { _rgb[0] = r; }
-	void setGreen(float g) {_rgb[1] = g; }
-	void setBlue(float b) {_rgb[2] = b; }
-	void set(float r, float g, float b) {
-		_rgb[0] = r;
-		_rgb[1] = g;
-		_rgb[2] = b;
-	}
-private:
-	float _rgb[3];
-};
-	
 class canvas {
 public:
 	canvas (short height, short width);
@@ -36,11 +22,14 @@ private:
 
 class scene {
 	camera _camera;
-	
+	std::vector<triangle> _triangles;
 public:
 	camera& getCamera() { return _camera; }
 	void draw(canvas& canvas);
 	bool save(canvas& canvas, const char* filename);
+	void add(vec3& p0, vec3 &p1, vec3 &p2) {
+		_triangles.emplace_back(p0, p1, p2);
+	}
 };
 
 #endif

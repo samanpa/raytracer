@@ -3,9 +3,17 @@
 
 #include "vec3.h"
 
-struct ray {
-	vec3 orig;
-	vec3 dir;
+class ray {
+public:
+	vec3& O() { return _orig; }
+	vec3& D() { return _dir; }
+	float tfar;
+	float t;
+	float u;
+	float v;
+private:
+	vec3 _orig;
+	vec3 _dir;
 };
 
 #endif
