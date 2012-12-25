@@ -9,10 +9,10 @@ triangle_barycentric::triangle_barycentric(vec3 &v0, vec3 &v1, vec3 &v2) {
 	vec3 N(vec3::cross(e1, e2));
 	N *= 1/N.getMagnitude();
 	
-	if (fabs(N[0]) > fabs(N[1]))
-		k = (fabs(N[0]) > fabs(N[2])) ? 0 : 2;
+	if (fabs(N[X_Axis]) > fabs(N[Z_Axis]))
+		k = (fabs(N[X_Axis]) > fabs(N[Z_Axis])) ? X_Axis : Z_Axis;
 	else
-		k = (fabs(N[1]) > fabs(N[2])) ? 1 : 2;
+		k = (fabs(N[Y_Axis]) > fabs(N[Z_Axis])) ? Y_Axis : Z_Axis;
 
 	int ku = modulo3[1 + k];
 	int kv = modulo3[2 + k];
@@ -23,7 +23,11 @@ triangle_barycentric::triangle_barycentric(vec3 &v0, vec3 &v1, vec3 &v2) {
 	bu = v2[ku] - v0[ku];
 	bv = v2[kv] - v0[kv];
 
-	area = 1 / (au * bv - av * bu);
+	float area = 1 / (au * bv - av * bu);
+	bu *= area;
+	bv *= area;
+	au *= area;
+	av *= area;
 
 	nu   = N[ku] / N[k];
 	nv   = N[kv] / N[k];
@@ -35,21 +39,17 @@ bool triangle_barycentric::intersect(unsigned int prim_id, ray& ray) {
 		
 	vec3 diff(p0 - ray.O());
 	auto &dir = ray.D();
-	float t = dir[ku] * nu + dir[kv] * nv + dir[k];
-	t = (diff[ku] * nu + diff[kv] * nv + diff[k]) / t;
+	float nd = dir[ku] * nu + dir[kv] * nv + dir[k]; //N . D
+	float t = (diff[ku] * nu + diff[kv] * nv + diff[k]) / nd;
 	
-	if (!(t > 0.0) || t > ray.tfar) {
+	if (!(t > 0.0) || t > ray.tfar)
 		return false;
-	}
 
 	float hu = dir[ku] * t - diff[ku];
 	float hv = dir[kv] * t - diff[kv];
 
-	float uarea = bv * hu - bu * hv;
-	float varea = au * hv - av * hu;
-
-	float u = uarea * area;
-	float v = varea * area;
+	float u = bv * hu - bu * hv;
+	float v = au * hv - av * hu;
 
 	float uv = u + v;
 	if ((unsigned int&)uv > 0x3F800000)

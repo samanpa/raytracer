@@ -5,15 +5,16 @@
 
 struct triangle_barycentric {
 	triangle_barycentric (vec3 &v0, vec3 &v1, vec3 &v2);
-	int   k; //projection plane
+	int   k;  //projection plane
 	vec3  p0;
-	float nu;
+	float nu; //projected normal
 	float nv;
-	float area;
-	float au;
+	float au; //projected a (p1 - p0)
 	float av;
-	float bu;
+	float bu; //projected b (p2 - p0);
 	float bv;
+	int   pad1;
+	int   pad2; //pad to 12 words   
 
 	bool intersect(unsigned int primId, ray& ray);
 };
