@@ -12,15 +12,15 @@ public:
 		, _angle(90) 
 		{}
 	
-	vec3& getLocation() { return _loc; }
-	vec3& getLookAt() { return _lookat; }
-	vec3& getUp() { return _up; }
+	vec3f& getLocation() { return _loc; }
+	vec3f& getLookAt() { return _lookat; }
+	vec3f& getUp() { return _up; }
 	float& getAngle() { return _angle; }
 
 private:		
-	vec3 _loc;
-	vec3 _lookat;
-	vec3 _up;
+	vec3f _loc;
+	vec3f _lookat;
+	vec3f _up;
 	float _angle;
 };
 

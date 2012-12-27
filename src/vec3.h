@@ -4,6 +4,7 @@
 #include <string.h>
 #include <iostream>
 #include <cmath>
+#include "platform.h"
 
 enum {
 	X_Axis = 0,
@@ -11,81 +12,74 @@ enum {
 	Z_Axis
 };
 
+template<class T>
 class vec3 {
 public:
-	vec3() {
-	}
+	__forceinline vec3() {}
+	__forceinline vec3(T x, T y, T z) {_v[0] = x; _v[1] = y; _v[2] = z; }
+	__forceinline vec3(vec3&& v) {_v[0] = v[0]; _v[1] = v[1]; _v[2] = v[2];}
+	__forceinline vec3(const vec3& v) {_v[0] = v[0]; _v[1] = v[1]; _v[2] = v[2];}
 
-	vec3(vec3&& v) {
-		_v[0] = v._v[0]; _v[1] = v._v[1]; _v[2] = v._v[2];
-	}
-
-	vec3(const vec3& v) {
-		_v[0] = v._v[0]; _v[1] = v._v[1]; _v[2] = v._v[2];
-	}
-
-	vec3(float x, float y, float z) {
-		_v[0] = x; _v[1] = y; _v[2] = z; 
-	}
-
-	vec3& operator=(const vec3& v) {
-		_v[0] = v._v[0]; _v[1] = v._v[1]; _v[2] = v._v[2];
+	__forceinline vec3& operator=(const vec3& v) {
+		_v[0] = v[0]; _v[1] = v._v[1]; _v[2] = v._v[2];
 		return *this;
 	}
 
-	vec3& operator-=(const vec3& v) {
-		_v[0] -= v._v[0]; _v[1] -= v._v[1]; _v[2] -= v._v[2];
-		return *this;
-	}
+	__forceinline T &operator [](int idx) { return _v[idx]; }
+	__forceinline const T &operator [](int idx) const { return _v[idx]; }
 
-	vec3& operator+=(const vec3& v) {
-		_v[0] += v._v[0]; _v[1] += v._v[1]; _v[2] += v._v[2];
-		return *this;
-	}
-
-	vec3& operator*=(const float s) {
+	//Math
+	__forceinline vec3& operator*=(const T& s) {
 		_v[0] *= s; _v[1] *= s; _v[2] *= s;
 		return *this;
 	}
-
-	vec3 operator*(const float s) {
+	__forceinline vec3 operator*(const T& s) {
 		return vec3(_v[0]*s, _v[1]*s, _v[2]*s);
 	}
-
-	vec3 operator-(const vec3& v) {
+	__forceinline vec3& operator-=(const vec3& v) {
+		_v[0] -= v[0]; _v[1] -= v[1]; _v[2] -= v[2];
+		return *this;
+	}
+	__forceinline vec3& operator+=(const vec3& v) {
+		_v[0] += v[0]; _v[1] += v[1]; _v[2] += v[2];
+		return *this;
+	}
+	__forceinline vec3 operator-(const vec3& v) {
 		return vec3(_v[0]-v._v[0], _v[1]-v._v[1], _v[2]-v._v[2]);
 	}
-
-	vec3 operator+(const vec3& v) {
+	__forceinline vec3 operator+(const vec3& v) {
 		return vec3(_v[0]+v._v[0], _v[1]+v._v[1], _v[2]+v._v[2]);
 	}
-
-	float &operator [](int idx) {
-		return _v[idx];
-	}
 	
-	float getMagnitude() {
-		return ::sqrt(dot(*this, *this));
-	}
-
 	friend std::ostream& operator<<(std::ostream& o, vec3& v) {
 		o << "<" << v[0] << "," << v[1] << "," << v[2] << ">";
 		return o;
 	}
 
-	static float dot(vec3& v1, vec3& v2) {
-		return v1[0]*v2[0] + v1[1]*v2[1] + v1[2]*v2[2];
-	}
-
-	static vec3 cross(vec3 &v1, vec3 &v2) {
-		vec3 v(v1._v[1]*v2._v[2] - v1._v[2]*v2._v[1],
-		       v1._v[2]*v2._v[0] - v1._v[0]*v2._v[2],
-		       v1._v[0]*v2._v[1] - v1._v[1]*v2._v[0]);
-		return v;
-	}
-
 private:
-	float _v[3];
+	T _v[3];
 };
+
+template<typename T>
+__forceinline T length(const vec3<T> &v) {
+	return sqrt (v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
+}
+template<typename T>
+__forceinline float dot(const vec3<T>& v1, const vec3<T>& v2) {
+	return v1[0]*v2[0] + v1[1]*v2[1] + v1[2]*v2[2];
+}
+template<typename T>
+__forceinline vec3<T> cross(vec3<T> &v1, vec3<T> &v2) {
+	vec3<T> v(v1[1]*v2[2] - v1[2]*v2[1],
+		  v1[2]*v2[0] - v1[0]*v2[2],
+		  v1[0]*v2[1] - v1[1]*v2[0]);
+	return v;
+}
+__forceinline void normalize(vec3<float> &v) {
+	float m = 1.f / length(v);
+	v *= m;
+}	       
+
+typedef vec3<float> vec3f;
 
 #endif

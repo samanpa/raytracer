@@ -46,7 +46,7 @@ static bool readFloat(float& val) {
 	return true;
 } 
 
-static bool readVector(vec3& v) {
+static bool readVector(vec3f& v) {
 	CHECK(LANGLE, "Expecting <");
 	if (!readFloat(v[0])) return false;
 	CHECK(COMMA, "Expecting , ");
@@ -68,7 +68,7 @@ static bool readIntVector(int v[3]) {
 	return true;
 }
 
-static bool parseVertices(vector<vec3> &vertices) {
+static bool parseVertices(vector<vec3f> &vertices) {
 	int numVertices;
 	CHECK(LBRACE, "expecting {");
 	if (!readInt(numVertices))
@@ -76,15 +76,15 @@ static bool parseVertices(vector<vec3> &vertices) {
 	
 	vertices.resize(numVertices);
 	for (int i = 0; i < numVertices; i++) {
-		vec3 v;
+		vec3f v;
 		if (!readVector(v)) return false;
-		vertices[i] = vec3(v[0], v[1], v[2]);
+		vertices[i] = vec3f(v[0], v[1], v[2]);
 	}
 	CHECK(RBRACE, "expecting }");
 	return true;
 }
 
-static bool parseNormals(scene &scene, vector<vec3> &vertices) {
+static bool parseNormals(scene &scene, vector<vec3f> &vertices) {
 	unsigned int numNormals;
 	CHECK(LBRACE, "expecting {");
 	if (!readInt(numNormals))
@@ -97,7 +97,7 @@ static bool parseNormals(scene &scene, vector<vec3> &vertices) {
 		     << endl;
 	}
 	while (numNormals-- > 0) {
-		vec3 v;
+		vec3f v;
 		if (!readVector(v)) return false;
 		scene.addNormal(v);
 	}
@@ -105,7 +105,7 @@ static bool parseNormals(scene &scene, vector<vec3> &vertices) {
 	return true;
 }
 
-static bool parseFaces(scene& scene, vector<vec3> &vertices) {
+static bool parseFaces(scene& scene, vector<vec3f> &vertices) {
 	int numFaces;
 	CHECK(LBRACE, "expecting {");
 	if (!readInt(numFaces))
@@ -136,7 +136,7 @@ static bool parseMaterial(scene& scene) {
 }
 
 static bool parseMesh(scene& scene) {
-	vector<vec3> vertices;
+	vector<vec3f> vertices;
 
 	CHECK(LBRACE, " Expecting { in mesh");
 	

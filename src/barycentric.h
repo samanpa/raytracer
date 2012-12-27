@@ -4,9 +4,11 @@
 #include "ray.h"
 
 struct triangle_barycentric {
-	triangle_barycentric (vec3 &v0, vec3 &v1, vec3 &v2);
+	triangle_barycentric (vec3f &v0, vec3f &v1, vec3f &v2);
 	int   k;  //projection plane
-	vec3  p0;
+	float p0d;//p0 . N
+	float p0u;//p0 projection in u
+	float p0v;//p0 projection in v
 	float nu; //projected normal
 	float nv;
 	float au; //projected a (p1 - p0)
@@ -16,7 +18,8 @@ struct triangle_barycentric {
 	int   pad1;
 	int   pad2; //pad to 12 words   
 
-	bool intersect(unsigned int primId, ray& ray);
+	void intersect(unsigned int primId, ray<float>& ray, hit& hit);
+	void intersect(unsigned int primId, ray<ssef>& ray, hit4& hit);
 };
 
 #endif

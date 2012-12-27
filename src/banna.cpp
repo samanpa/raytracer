@@ -17,8 +17,7 @@ int main(int argc, char **argv, char **environ) {
 		}
 	}
 
-	scene.getCamera().getAngle() = 60;
-
+	scene.getCamera().getAngle() = 56;
 	scene.draw(canvas);
 	cout << "Draw took "
 	     << scene._intersectCost.val / scene._intersectCost.cnt
