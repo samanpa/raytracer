@@ -1,190 +1,124 @@
 #include "parser.h"
 #include "io.h"
 #include <iostream>
+#include <sstream>
 
 using namespace std;
 
 bplex_val_t bplex_lval;
 
-static void report_error(const string& msg) {
-	cerr << msg << " "
-	     << bplex_filename() << ":" << bplex_lineno << endl;
+void CHECK(int token, const string& msg){
+	if (bplex_lex() != token)
+		throw parse_error(msg);
 }
 
-#define CHECK1(token, TOK, msg)  do {					\
-		if ((token) != TOK) {					\
-			report_error(msg);				\
-			return false;					\
-		}							\
-	} while(0)
-
-#define CHECK(TOK, msg) CHECK1(bplex_lex(), TOK, msg)
-
-static bool readInt(unsigned int& val) {
+static int readInt() {
 	CHECK(NUM, " Expecting integer ");
-        val = bplex_lval.val;
-        return true;
+        return bplex_lval.val;
 }
 
-static bool readInt(int& val) {
-	CHECK(NUM, " Expecting integer ");
-        val = bplex_lval.val;
-        return true;
-}
-
-static bool readFloat(float& val) {
+static float readFloat() {
 	int token = bplex_lex();
 	if (token == NUM)
-		val = bplex_lval.val;
+		return bplex_lval.val;
 	else if (token == FNUM)
-		val = bplex_lval.fval;
-	else {
-		cerr << token << " " << FNUM << endl;
-		report_error ("Expecting float ");
-                return false;
-        }
-	return true;
+		return bplex_lval.fval;
+	throw parse_error("Expecting float ");
 } 
 
-static bool readVector(vec3f& v) {
+static vec3f readVector() {
 	CHECK(LANGLE, "Expecting <");
-	if (!readFloat(v[0])) return false;
-	CHECK(COMMA, "Expecting , ");
-	if (!readFloat(v[1])) return false;
-	CHECK(COMMA, "Expecting ,");
-	if (!readFloat(v[2])) return false;
+        float f1 = readFloat(); CHECK(COMMA, "Expecting , ");
+	float f2 = readFloat(); CHECK(COMMA, "Expecting ,");
+	float f3 = readFloat();
 	CHECK(RANGLE, "Expecting >");
-	return true;
+	return vec3f(f1, f2, f3);
 }
 
-static bool readIntVector(int v[3]) {
+static vec3<int> readIntVector() {
 	CHECK(LANGLE, "Expecting <");
-	if (!readInt(v[0])) return false;
-	CHECK(COMMA, "Expecting , ");
-	if (!readInt(v[1])) return false;
-	CHECK(COMMA, "Expecting ,");
-	if (!readInt(v[2])) return false;
+        int v1 = readInt(); CHECK(COMMA, "Expecting , ");
+	int v2 = readInt(); CHECK(COMMA, "Expecting ,");
+	int v3 = readInt();
 	CHECK(RANGLE, "Expecting >");
-	return true;
+	return vec3<int>(v1, v2, v3);
 }
 
-static bool parseVertices(vector<vec3f> &vertices) {
-	int numVertices;
+static void parseVertices(scene& scene) {
 	CHECK(LBRACE, "expecting {");
-	if (!readInt(numVertices))
-		return false;
-	
-	vertices.resize(numVertices);
+	int numVertices = readInt();
 	for (int i = 0; i < numVertices; i++) {
-		vec3f v;
-		if (!readVector(v)) return false;
-		vertices[i] = vec3f(v[0], v[1], v[2]);
+		vec3f v = readVector();
+		scene.addVertex(v);
 	}
 	CHECK(RBRACE, "expecting }");
-	return true;
 }
 
-static bool parseNormals(scene &scene, vector<vec3f> &vertices) {
-	unsigned int numNormals;
+static void parseNormals(scene &scene) {
 	CHECK(LBRACE, "expecting {");
-	if (!readInt(numNormals))
-		return false;
+	unsigned int numNormals = readInt();
 
-	if (numNormals != vertices.size()) {
-		report_error("number of vertices and normals don't match .");
-		cerr << " num vertices " << vertices.size() 
-		     << " num normals  " << numNormals
-		     << endl;
+	if (numNormals != scene.getNumVertices()) {
+		stringstream str;
+		str << "number of vertices and normals don't match ."
+		    << " num vertices " << scene.getNumVertices() 
+		    << " num normals  " << numNormals;
+		throw parse_error(str.str());
 	}
 	while (numNormals-- > 0) {
-		vec3f v;
-		if (!readVector(v)) return false;
+		vec3f v = readVector();
 		scene.addNormal(v);
 	}
 	CHECK(RBRACE, "expecting }");
-	return true;
 }
 
-static bool parseFaces(scene& scene, vector<vec3f> &vertices) {
-	int numFaces;
+static void parseFaces(scene& scene) {
 	CHECK(LBRACE, "expecting {");
-	if (!readInt(numFaces))
-		return false;
+	int numFaces = readInt();
 
 	while (numFaces-- > 0) {
-		int v[3];
-		if (!readIntVector(v)) return false;
-		if (v[0] > (int)vertices.size() || v[0] < 0 ||
-		    v[1] > (int)vertices.size() || v[1] < 0 ||
-		    v[2] > (int)vertices.size() || v[2] < 0) {
-			report_error("Invalid vertex");
-			cerr << "\t" << v[0] << " " << v[1] 
-			     << " " << v[2] << endl;
-			return false;
+		vec3<int> v(readIntVector());
+		if (!scene.addFace(v[0], v[1], v[2])) {
+			stringstream str;
+			str << "Invalid vertex " << v;
+			throw parse_error(str.str());
 		}
-		scene.add(vertices[v[0]], vertices[v[1]], vertices[v[2]]);
 	}
 	CHECK(RBRACE, "expecting }");
-	return true;
 }
 
-static bool parseMaterial(scene& scene) {
+static void parseMaterial(scene& scene) {
 	CHECK(LBRACE, "expecting {");
 	CHECK(IDENTIFIER, " expecing identifier");
 	CHECK(RBRACE, "expecting }");
-	return true;
 }
 
-static bool parseMesh(scene& scene) {
-	vector<vec3f> vertices;
-
+static void parseMesh(scene& scene) {
 	CHECK(LBRACE, " Expecting { in mesh");
 	
 	while(true) {
 		int token = bplex_lex();
 		switch(token) {
-		case VERTICES:
-			if (!parseVertices(vertices)) return false;
-			break;
-		case FACES:
-			if (!parseFaces(scene, vertices)) return false;
-			break;
-		case NORMALS:
-			if (!parseNormals(scene, vertices)) return false;
-			break;
-		case MATERIAL:
-			if (!parseMaterial(scene)) return false;
-			break;
-		case RBRACE:
-			return true;
+		case VERTICES: parseVertices(scene); break;
+		case FACES:    parseFaces(scene); break;
+		case NORMALS:  parseNormals(scene); break;
+		case MATERIAL: parseMaterial(scene); break;
+		case RBRACE:   return;
 		default:
-			report_error("expecting vertex/face");
-			cerr << token << endl;
-			return false;
+			stringstream str;
+			str << "expecting vertex/face " << token;
+			throw parse_error(str.str());
 		}
 	}
-
-	return true;
-}
-
-static bool parseTopLevel(scene& scene) {
-	int token = bplex_lex();
-	switch (token) {
-	case MESH:
-		if (!parseMesh(scene))
-			return false;
-		break;
-	default:
-		cerr << "Error while parsing file " << endl;
-		return false;
-	};
-
-	return true;
 }
 
 bool parsePov (char *filename, scene& scene) {
 	if (bplex_file(filename) == 0)
 		return false;
 
-	return parseTopLevel(scene);
+	int token = bplex_lex();
+	switch (token) {
+	case MESH: parseMesh(scene); break;
+	default: throw parse_error("Error while parsing file ");
+	};
 }

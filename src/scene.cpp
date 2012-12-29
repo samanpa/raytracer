@@ -1,9 +1,8 @@
 #include "scene.h"
 #include "ray.h"
 #include <iostream>
-#include <gd.h>
-#include <stdio.h>
 #include <cmath>
+#include "grid.h"
 #include "noaccel.h"
 
 using namespace std;
@@ -36,12 +35,6 @@ static void getDownRight(scene &scene, canvas &canvas,
 		    left[1]*-leftstep,
 		    left[2]*-leftstep);
 }
-
-void scene::shade(canvas& canvas, unsigned i, unsigned j, hit4& hit)
-{
-	
-}
-
 void scene::shade(canvas& canvas, unsigned i, unsigned j, hit& hit)
 {
 	if (hit.prim != (unsigned int)-1) {
@@ -53,67 +46,24 @@ void scene::shade(canvas& canvas, unsigned i, unsigned j, hit& hit)
 
 void scene::draw(canvas& canvas)
 {
+	grid grid;
 	vec3f down;
 	vec3f right;
 	vec3f left_top;
 	getDownRight(*this, canvas, down, right, left_top);
-	ray<float> ray;
-	ray.O() = _camera.getLocation();
+
+	grid.init(*this);
 	for (int i = 0; i < canvas.getHeight() ; ++i) {
 		vec3f pos(left_top + (down * i));
 		for (int j = 0; j < canvas.getWidth(); ++j) {
-			ray.D() = pos - ray.O();
-			normalize(ray.D());
+			vec3f dir = pos - _camera.getLocation();
+			ray ray (_camera.getLocation(), dir);
 			hit h;
-			h.tfar = 3.3e38f;
 			h.prim = -1; 
-			noaccel::draw(*this, ray, h);
+			grid.draw(*this, ray, h);
 			shade(canvas, i, j, h);
 			pos += right;
 		}
 	}
 }
 
-void scene::draw4(canvas& canvas)
-{
-	vec3f down;
-	vec3f right;
-	vec3f left_top;
-	getDownRight(*this, canvas, down, right, left_top);
-	ray<ssef> ray;
-	ray.O()[X_Axis] = _camera.getLocation()[X_Axis];
-	ray.O()[Y_Axis] = _camera.getLocation()[Y_Axis];
-	ray.O()[Z_Axis] = _camera.getLocation()[Z_Axis];
-	
-	for (int i = 0; i < canvas.getHeight() ; i += 2) {
-		vec3f pos(left_top + (down * i));
-		for (int j = 0; j < canvas.getWidth(); j += 2) {
-/*
-			ray.D() *= 1/ray.D().getMagnitude();
-			ray.tfar = 3.3e38f;
-			ray.prim = -1; 
-			noaccel::draw(*this, ray);
-			shade(canvas, i, j, ray);
-*/
-		}
-	}
-}
-
-bool scene::save(canvas& canvas, const char *filename) {
-	gdImagePtr image = gdImageCreateTrueColor(canvas.getWidth(),
-						  canvas.getHeight());
-	FILE *file = fopen(filename, "wb");
-	for (int i = 0; i < canvas.getHeight(); ++i) {
-		for (int j = 0; j < canvas.getWidth(); ++j) {
-			float color = gdImageColorExact(image,
-							(int)(255 * canvas(i,j).getRed()),
-							(int)(255 * canvas(i,j).getGreen()),
-							(int)(255 * canvas(i,j).getBlue()));
-			gdImageSetPixel(image, j, i, color);
-		}
-	}
-	gdImagePng(image, file);
-	gdImageDestroy(image);
-	fclose(file);
-	return true;
-}

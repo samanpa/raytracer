@@ -36,16 +36,16 @@ triangle_barycentric::triangle_barycentric(vec3f &v0, vec3f &v1, vec3f &v2) {
 	p0v  = v0[kv];
 }
 
-void triangle_barycentric::intersect(unsigned int prim_id, ray<float>& ray, hit& h) {
+void triangle_barycentric::intersect(unsigned int prim_id, ray& ray, hit& h) {
 	int ku = modulo3[1 + k];
 	int kv = modulo3[2 + k];
 	
-	vec3f &o = ray.O();
-	vec3f &d = ray.D();
+	const vec3f &o = ray.O();
+	const vec3f &d = ray.D();
 	float nd = d[ku] * nu + d[kv] * nv + d[k]; //N . D
 	float t = (p0d - o[k] - o[ku]*nu - o[kv]*nv)/nd;
 	
-	if (!(t > 0.0) || t > h.tfar)
+	if (!(t > 0.0) || t > ray.tfar)
 		return;
 
 	float hu = d[ku] * t - p0u + o[ku];
@@ -62,11 +62,9 @@ void triangle_barycentric::intersect(unsigned int prim_id, ray<float>& ray, hit&
 	if (((unsigned int&)u | (unsigned int&)v) > 0x80000000)
 		return;
 	
-	h.prim  = prim_id;
-	h.u     = u;
-	h.v     = v;
-	h.tfar  = t;
+	h.prim    = prim_id;
+	h.u       = u;
+	h.v       = v;
+	ray.tfar  = t;
 }
 
-void triangle_barycentric::intersect(unsigned int prim_id, ray<ssef>& ray, hit4& h) {
-}

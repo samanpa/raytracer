@@ -7,12 +7,16 @@ using namespace std;
 
 int main(int argc, char **argv, char **environ) {
 	scene scene;
-	canvas canvas(128, 128);
+	canvas canvas(512, 512);
 
 	bpray_library_path_add(".");
 	if (argc > 1) {
-		if (!parsePov(argv[1], scene)) {
-			cerr << "Could not parse " << argv[1] << endl;
+		try {
+			parsePov(argv[1], scene);
+		}
+		catch (parse_error& pe) {
+			cerr << "Could not parse " << argv[1]
+			     << " " << pe.what() << endl;
 			return 1;
 		}
 	}
@@ -23,6 +27,6 @@ int main(int argc, char **argv, char **environ) {
 	     << scene._intersectCost.val / scene._intersectCost.cnt
 	     << "cycles per pixel"
 	     << endl;
-	scene.save(canvas, "image.png");
+	canvas.save("image.png");
 
 }

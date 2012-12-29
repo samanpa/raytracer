@@ -7,7 +7,6 @@
 
 struct hit {
 	unsigned int prim;
-	float tfar;
 	float u;
 	float v;
 };
@@ -19,16 +18,31 @@ struct hit4 {
 	ssef v;
 };
 
-template<typename T>
 class ray {
 public:
-	vec3<T>& O() { return _orig; }
-	vec3<T>& D() { return _dir; }
-private:
-	vec3<T> _orig;
-	vec3<T> _dir;
-};
+	ray(vec3f& o, vec3f& d) {
+		tfar = 3.3e38f;
+		_orig = o;
+		_dir = d;
+		normalize(_dir);
+		_invdir = rcp(_dir);
+		signx = (0x80000000 & (int&)_dir[X_Axis]) >> 31;
+		signy = (0x80000000 & (int&)_dir[Y_Axis]) >> 31;
+		signz = (0x80000000 & (int&)_dir[Z_Axis]) >> 31;
+	}
 
-typedef ray<ssef> ray4;
+	const vec3f& O() const { return _orig; }
+	const vec3f& D() const { return _dir; }
+	const vec3f& rcpD() const { return _invdir; }
+	float tfar;
+private:
+	vec3f _orig;
+	vec3f _dir;
+	vec3f _invdir;
+public:
+	int signx;
+	int signy;
+	int signz;
+};
 
 #endif

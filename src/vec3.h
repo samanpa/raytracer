@@ -5,6 +5,7 @@
 #include <iostream>
 #include <cmath>
 #include "platform.h"
+#include "bpmath.h"
 
 enum {
 	X_Axis = 0,
@@ -51,10 +52,14 @@ public:
 		return vec3(_v[0]+v._v[0], _v[1]+v._v[1], _v[2]+v._v[2]);
 	}
 	
-	friend std::ostream& operator<<(std::ostream& o, vec3& v) {
+	friend std::ostream& operator<<(std::ostream& o, const vec3& v) {
 		o << "<" << v[0] << "," << v[1] << "," << v[2] << ">";
 		return o;
 	}
+
+	const T& x() const { return _v[0]; }
+	const T& y() const { return _v[1]; }
+	const T& z() const { return _v[2]; }
 
 private:
 	T _v[3];
@@ -75,10 +80,16 @@ __forceinline vec3<T> cross(vec3<T> &v1, vec3<T> &v2) {
 		  v1[0]*v2[1] - v1[1]*v2[0]);
 	return v;
 }
-__forceinline void normalize(vec3<float> &v) {
-	float m = 1.f / length(v);
-	v *= m;
-}	       
+
+template <typename T>
+__forceinline void normalize(vec3<T> &v) {
+	v *= rcp(length(v));
+}
+
+template <typename T>
+__forceinline vec3<T> rcp(vec3<T>& v) {
+	return vec3<T>(rcp(v[0]), rcp(v[1]), rcp(v[2]));
+}
 
 typedef vec3<float> vec3f;
 
