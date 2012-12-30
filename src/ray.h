@@ -26,9 +26,6 @@ public:
 		_dir = d;
 		normalize(_dir);
 		_invdir = rcp(_dir);
-		signx = (0x80000000 & (int&)_dir[X_Axis]) >> 31;
-		signy = (0x80000000 & (int&)_dir[Y_Axis]) >> 31;
-		signz = (0x80000000 & (int&)_dir[Z_Axis]) >> 31;
 	}
 
 	const vec3f& O() const { return _orig; }
@@ -39,10 +36,6 @@ private:
 	vec3f _orig;
 	vec3f _dir;
 	vec3f _invdir;
-public:
-	int signx;
-	int signy;
-	int signz;
 };
 
 #endif

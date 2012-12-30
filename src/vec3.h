@@ -5,7 +5,7 @@
 #include <iostream>
 #include <cmath>
 #include "platform.h"
-#include "bpmath.h"
+#include "float.h"
 
 enum {
 	X_Axis = 0,
