@@ -1,0 +1,2 @@
+- Toxie thesis (Triangle intersection + box intersection)
+- Ray Tracing Animated Scenes using Coherent Grid Traversal

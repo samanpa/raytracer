@@ -1,2 +1,2 @@
-EXTRA_DIST      = experiences optimizing links
+EXTRA_DIST      = experiences optimizing links papers.txt
 
