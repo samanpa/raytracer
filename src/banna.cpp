@@ -8,6 +8,7 @@ using namespace std;
 int main(int argc, char **argv, char **environ) {
 	scene scene;
 	canvas canvas(512, 512);
+	camera& camera = scene.getCamera();
 
 	bpray_library_path_add(".");
 	if (argc > 1) {
@@ -21,12 +22,15 @@ int main(int argc, char **argv, char **environ) {
 		}
 	}
 
-	scene.getCamera().getAngle() = 56;
+	camera.getAngle() = 56;
+	
 	scene.draw(canvas);
-	cout << "Draw took "
-	     << scene._intersectCost.val / scene._intersectCost.cnt
-	     << "cycles per pixel"
-	     << endl;
+	if (scene._intersectCost.cnt) {
+		cout << "Draw took "
+		     << scene._intersectCost.val / scene._intersectCost.cnt
+		     << "cycles per pixel"
+		     << endl;
+	}
 	canvas.save("image.png");
 
 }

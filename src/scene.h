@@ -25,6 +25,7 @@ struct scene {
 	void addNormal(vec3f& normal) { _normals.push_back(normal); }
 	void addVertex(vec3f& vertex) { _vertices.push_back(vertex); }
 	size_t getNumVertices() { return _vertices.size(); }
+	const std::vector<triangle>& getTriangles() const { return _triangles; }
 	const std::vector<vec3f>& getVertices() const { return _vertices; }
 	bool addFace(size_t v0, size_t v1, size_t v2) {
 		if (v0 > _vertices.size()
@@ -32,6 +33,7 @@ struct scene {
 		    || v2 > _vertices.size() ) 
 			return false;
 		_accels.emplace_back(_vertices[v0], _vertices[v1], _vertices[v2]);
+		_triangles.emplace_back(v0, v1, v2);
 		return true;
 	}
 };

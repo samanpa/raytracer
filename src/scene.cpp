@@ -2,21 +2,9 @@
 #include "ray.h"
 #include <iostream>
 #include <cmath>
-#include "grid.h"
-#include "noaccel.h"
+#include "kdtree.h"
 
 using namespace std;
-
-canvas::canvas(short height, short width) {
-	_colors = new color*[height];
-	_height  = height;
-	_width   = width;
-	for (int i = 0; i < height; ++i) {
-		_colors[i] = new color[width];
-		for (int j = 0; j < width; j++)
-			_colors[i][j].set(0.f, 0.f, 0.f);
-	}
-}
 
 static void getDownRight(scene &scene, canvas &canvas,
 			 vec3f& down, vec3f& right, vec3f& left_top) {
@@ -42,17 +30,22 @@ void scene::shade(canvas& canvas, unsigned i, unsigned j, hit& hit)
 		canvas(i,j).setGreen(0.5);
 		canvas(i,j).setBlue(0.5);
 	}
+	else {
+		canvas(i,j).setRed(1.f);
+		canvas(i,j).setGreen(1.f);
+		canvas(i,j).setBlue(1.f);
+
+	}
 }
 
 void scene::draw(canvas& canvas)
 {
-	grid grid;
+	kdtree accel(*this);
 	vec3f down;
 	vec3f right;
 	vec3f left_top;
 	getDownRight(*this, canvas, down, right, left_top);
 
-	grid.init(*this);
 	for (int i = 0; i < canvas.getHeight() ; ++i) {
 		vec3f pos(left_top + (down * i));
 		for (int j = 0; j < canvas.getWidth(); ++j) {
@@ -60,7 +53,7 @@ void scene::draw(canvas& canvas)
 			ray ray (_camera.getLocation(), dir);
 			hit h;
 			h.prim = -1; 
-			grid.draw(*this, ray, h);
+			accel.draw(*this, ray, h);
 			shade(canvas, i, j, h);
 			pos += right;
 		}

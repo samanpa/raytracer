@@ -22,7 +22,7 @@ public:
 	__forceinline vec3(const vec3& v) {_v[0] = v[0]; _v[1] = v[1]; _v[2] = v[2];}
 
 	__forceinline vec3& operator=(const vec3& v) {
-		_v[0] = v[0]; _v[1] = v._v[1]; _v[2] = v._v[2];
+		_v[0] = v[0]; _v[1] = v[1]; _v[2] = v[2];
 		return *this;
 	}
 
@@ -34,7 +34,7 @@ public:
 		_v[0] *= s; _v[1] *= s; _v[2] *= s;
 		return *this;
 	}
-	__forceinline vec3 operator*(const T& s) {
+	__forceinline vec3 operator*(const T& s) const {
 		return vec3(_v[0]*s, _v[1]*s, _v[2]*s);
 	}
 	__forceinline vec3& operator-=(const vec3& v) {
@@ -45,11 +45,11 @@ public:
 		_v[0] += v[0]; _v[1] += v[1]; _v[2] += v[2];
 		return *this;
 	}
-	__forceinline vec3 operator-(const vec3& v) {
-		return vec3(_v[0]-v._v[0], _v[1]-v._v[1], _v[2]-v._v[2]);
+	__forceinline vec3 operator-(const vec3& v) const {
+		return vec3(_v[0]-v[0], _v[1]-v[1], _v[2]-v[2]);
 	}
-	__forceinline vec3 operator+(const vec3& v) {
-		return vec3(_v[0]+v._v[0], _v[1]+v._v[1], _v[2]+v._v[2]);
+	__forceinline vec3 operator+(const vec3& v) const {
+		return vec3(_v[0]+v[0], _v[1]+v[1], _v[2]+v[2]);
 	}
 	
 	friend std::ostream& operator<<(std::ostream& o, const vec3& v) {
@@ -57,6 +57,9 @@ public:
 		return o;
 	}
 
+	T& x() { return _v[0]; }
+	T& y() { return _v[1]; }
+	T& z() { return _v[2]; }
 	const T& x() const { return _v[0]; }
 	const T& y() const { return _v[1]; }
 	const T& z() const { return _v[2]; }
@@ -90,6 +93,22 @@ template <typename T>
 __forceinline vec3<T> rcp(vec3<T>& v) {
 	return vec3<T>(rcp(v[0]), rcp(v[1]), rcp(v[2]));
 }
+
+template <typename T>
+__forceinline vec3<T> mul(const vec3<T>& v1, const vec3<T>& v2) {
+	return vec3<T>(v1[0] * v2[0], v1[1] * v2[1], v1[2]*v2[2]);
+}
+
+template <typename T>
+__forceinline vec3<T> div(const vec3<T>& v1, const vec3<T>& v2) {
+	return vec3<T>(v1[0] / v2[0], v1[1] / v2[1], v1[2]/v2[2]);
+}
+
+template <typename T>
+__forceinline vec3<T> operator*(const T& t, const vec3<T>& v) {
+	return vec3<T>(t * v[0], t * v[1], t * v[2]);
+}
+
 
 typedef vec3<float> vec3f;
 

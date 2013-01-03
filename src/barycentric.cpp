@@ -1,6 +1,6 @@
 #include "barycentric.h"
 
-static int modulo3[] = {0, 1, 2, 0, 1};
+int modulo3[] = {0, 1, 2, 0, 1};
 
 triangle_barycentric::triangle_barycentric(vec3f &v0, vec3f &v1, vec3f &v2) {
 	vec3f e1 = v1 - v0;
