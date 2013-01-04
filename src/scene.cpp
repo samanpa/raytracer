@@ -9,20 +9,27 @@ using namespace std;
 static void getDownRight(scene &scene, canvas &canvas,
 			 vec3f& down, vec3f& right, vec3f& left_top) {
 	auto& cam = scene.getCamera();
+	vec3f up(cam.getUp());
 	vec3f dir  = cam.getLookAt() - cam.getLocation();
-	//assume magnitude of direction vector is normalized
-	float leftstep = ::tan(cam.getAngle() * M_PI / 360.) 
-		/ (canvas.getWidth() - 1) * 2.;
-	float downstep = (leftstep * canvas.getHeight()) / canvas.getWidth();
-	vec3f left = cross(cam.getUp(), dir);
-	left_top = cam.getLocation() + dir + left + cam.getUp();
-	down = vec3f(cam.getUp()[0]*-downstep,
-		    cam.getUp()[1]*-downstep,
-		    cam.getUp()[2]*-downstep);
-	right= vec3f(left[0]*-leftstep,
-		    left[1]*-leftstep,
-		    left[2]*-leftstep);
+
+	//Assumes the direction vector is of unit length
+	float leftmag = ::tan(cam.getAngle() * M_PI / 360.);
+	float upmag   = leftmag * canvas.getHeight() / canvas.getWidth();
+	vec3f left    = cross(up, dir);
+
+	normalize(dir);
+	normalize(up);
+	normalize(left);
+
+	left_top = cam.getLocation() + dir 
+		+ (leftmag * left) + (upmag * up);
+
+	float downstep = 2.f * upmag   / (canvas.getWidth() - 1);;
+	float leftstep = 2.f * leftmag / (canvas.getWidth() - 1);
+	down = up   * -downstep;
+	right= left * -leftstep;
 }
+
 void scene::shade(canvas& canvas, unsigned i, unsigned j, hit& hit)
 {
 	if (hit.prim != (unsigned int)-1) {
