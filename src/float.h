@@ -9,6 +9,10 @@ __forceinline float rcp(float f) {
 	return 1.0f/f;
 }
 
+__forceinline float rsqrt(float f) {
+	return 1.0f/sqrt(f);
+}
+
 __forceinline int getSign(float f) {
 	return (0x80000000 & (int&)f) >> 31;
 }

@@ -86,7 +86,7 @@ __forceinline vec3<T> cross(vec3<T> &v1, vec3<T> &v2) {
 
 template <typename T>
 __forceinline void normalize(vec3<T> &v) {
-	v *= rcp(length(v));
+	v *= rsqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
 }
 
 template <typename T>
