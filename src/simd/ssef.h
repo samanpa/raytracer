@@ -19,8 +19,9 @@ struct ssef
 
 	__forceinline operator const __m128&( void ) const { return m128; }
 	__forceinline operator       __m128&( void )       { return m128; }
+	__forceinline const float& operator [] ( int x) const { return v[x]; }
 
-	friend std::ostream& operator<<(std::ostream& o, ssef& s) {
+	friend std::ostream& operator<<(std::ostream& o, const ssef& s) {
 		o << "<" << s.v[0] << "," << s.v[1]
 		  << "," << s.v[2] << "," << s.v[3] << ">";
 		return o;
@@ -51,6 +52,42 @@ __forceinline ssef& operator+=(ssef& a, const ssef& b ) {
 
 __forceinline const ssef operator-(const ssef& a, const ssef& b) {
 	return _mm_sub_ps(a.m128, b.m128);
+}
+
+__forceinline const ssef operator<(const ssef& a, const ssef& b) {
+	return _mm_cmplt_ps(a.m128, b.m128);
+}
+
+__forceinline const ssef operator<=(const ssef& a, const ssef& b) {
+	return _mm_cmple_ps(a.m128, b.m128);
+}
+
+__forceinline const ssef operator>(const ssef& a, const ssef& b) {
+	return _mm_cmpgt_ps(a.m128, b.m128);
+}
+
+__forceinline const ssef operator>=(const ssef& a, const ssef& b) {
+	return _mm_cmpge_ps(a.m128, b.m128);
+}
+
+__forceinline const ssef operator==(const ssef& a, const ssef& b) {
+	return _mm_cmpeq_ps(a.m128, b.m128);
+}
+
+__forceinline const ssef andnot(const ssef& a, const ssef& b) {
+        return _mm_andnot_ps(a.m128, b.m128);
+}
+
+__forceinline const ssef operator|(const ssef& a, const ssef& b) {
+	return _mm_or_ps(a.m128, b.m128);
+}
+
+__forceinline const ssef operator&(const ssef& a, const ssef& b) {
+	return _mm_and_ps(a.m128, b.m128);
+}
+
+__forceinline const ssef ifmask(const ssef &m, const ssef& a, const ssef& b) {
+        return (m & a) | andnot(m, b);
 }
 
 //http://en.wikipedia.org/wiki/Division_%28digital%29#Newton.E2.80.93Raphson_division
