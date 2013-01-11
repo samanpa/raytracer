@@ -29,3 +29,41 @@ bool box::intersect(ray &r, float& tmin, float& tmax) {
 	
 	return true;
 }
+
+//Works only if ray in packet is travelling in the same direction
+void box::intersect(ray4 &r, ssef& tnear, ssef& tfar) {
+	ssef tymax, tymin, tzmax, tzmin, mask, mask2, tmin, tmax;
+
+	int signx = getSign(r.rcpD().x()[0]);
+	int signy = getSign(r.rcpD().y()[0]);
+	int signz = getSign(r.rcpD().z()[0]);
+	
+	tmin  = ssef(bounds[    signx].x()) * r.rcpD().x();
+	tymax = ssef(bounds[1 ^ signy].y()) * r.rcpD().y();
+        mask  = (tmin > tymax);
+
+	tymin = ssef(bounds[    signy].y()) * r.rcpD().y();	
+        tmax  = ssef(bounds[1 ^ signx].x()) * r.rcpD().x();
+        mask  = mask | (tymin > tmax);
+
+        mask2 = (tymax < tmax); //if (tymax < tmax) tmax = tymax;
+        tmax  = ifmask(mask2, tymax, tmax);
+        tzmin = ssef(bounds[    signz].z()) * r.rcpD().z();
+        mask  = mask | (tzmin > tmax);
+	
+	mask2 = (tymin > tmin); //if (tymin > tmin) tmin = tymin;
+        tmin  = ifmask(mask2, tymin, tmin);
+        tzmax = ssef(bounds[1 ^ signz].z()) * r.rcpD().z();
+        mask  = mask | (tmin > tzmax);
+
+        mask2 = (tzmax < tmax); //if (tzmax < tmax) tmax = tzmax;
+        tmax  = ifmask(mask2, tzmax, tmax);
+        mask  = mask | (tmax < _mm_setzero_ps());
+
+        mask2 = (tzmin > tmin); //if (tzmin > tmin) tmin = tzmin;
+        tmin  = ifmask(mask2, tzmin, tmin);
+
+        tfar  = ifmask(mask, tfar, tmax);
+        mask  = mask | (tmin < _mm_setzero_ps());
+        tnear = ifmask(mask, tnear, tmin);
+}

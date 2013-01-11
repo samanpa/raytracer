@@ -15,5 +15,6 @@ public:
 	}
 
 	bool intersect(ray &r, float& tmin, float& tmax);
+	void intersect(ray4 &r, ssef& tmin, ssef& tmax);
 };
 #endif
