@@ -108,5 +108,4 @@ __forceinline ssef rsqrt(ssef a) {
 							   _mm_set_ps(-0.5f, -0.5f, -0.5f, -0.5f)), r), _mm_mul_ps(r, r)));
 }
 
-
 #endif

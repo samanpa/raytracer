@@ -11,9 +11,11 @@ struct ssei
 	__forceinline ssei() {}
 	__forceinline ssei( const ssei& a) { m128 = a.m128; }
 	__forceinline ssei& operator=(const ssei& a) {m128 = a.m128; return *this; }
-	__forceinline ssei( const float&  a ) : m128(_mm_shuffle_epi32(_mm_castps_si128(_mm_load_ss((float*)&a)), _MM_SHUFFLE(0, 0, 0, 0))) {}
+        __forceinline ssei( const int& a ) : m128(_mm_shuffle_epi32(_mm_castps_si128(_mm_load_ss((float*)&a)), _MM_SHUFFLE(0, 0, 0, 0))) {}
 	__forceinline ssei( int a, int b, int c, int d) : m128(_mm_set_epi32(d, c, b, a)) {}
 	__forceinline ssei( const __m128i& m128) : m128(m128) {}
+
+        __forceinline explicit ssei( const __m128 a ) : m128(_mm_cvtps_epi32(a)) {}
 
 	__forceinline operator const __m128i&( ) const { return m128; }
 	__forceinline operator       __m128i&( )       { return m128; }
