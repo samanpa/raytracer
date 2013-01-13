@@ -10,6 +10,10 @@ struct statistic {
 		this->val += val;
 		++this->cnt;
 	}
+	void inc(uint64_t val, int cnt) {
+		this->val += val;
+		this->cnt += cnt;
+	}
 };
 
 

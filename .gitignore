@@ -21,3 +21,5 @@ src/banna
 src/*.o
 src/*.a
 src/stamp-h1
+
+*TAGS

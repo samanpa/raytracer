@@ -12,6 +12,7 @@ class kdtree {
 public:
 	kdtree(scene& scene);
 	void draw(scene& scene, ray& ray, hit& hit);
+	void draw(scene& scene, ray4& ray, hit4& hit);
 	
 	nodeid allocNode();
 	void initLeaf(nodeid id, std::vector<int> &tris);

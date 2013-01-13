@@ -11,7 +11,7 @@ CLEANFILES              =  lexer.cc
 libbp_ray_a_CXXFLAGS 	= $(common_CXXFLAGS)
 libbp_ray_a_SOURCES	= lexer.ll parser.cpp io.cpp \
 			triangle.cpp barycentric.cpp \
-			box.cpp kdtree.cpp kdtreebuilder.cpp \
+			utils.cpp box.cpp kdtree.cpp kdtreebuilder.cpp \
 			canvas.cpp scene.cpp 
 
 banna_CXXFLAGS 		= $(common_CXXFLAGS)

@@ -7,7 +7,7 @@ using namespace std;
 
 bplex_val_t bplex_lval;
 
-void CHECK(int token, const string& msg){
+static inline void CHECK(int token, const char* msg){
 	if (bplex_lex() != token)
 		throw parse_error(msg);
 }

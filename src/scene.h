@@ -20,7 +20,9 @@ struct scene {
 
 	camera& getCamera() { return _camera; }
 	void draw(canvas& canvas);
+	void drawPacket(canvas& canvas);
 	void shade(canvas& canvas, unsigned i, unsigned j, hit& hit);
+	void shade(canvas& canvas, ssei i, ssei j, hit4& hit);
 
 	void addNormal(vec3f& normal) { _normals.push_back(normal); }
 	void addVertex(vec3f& vertex) { _vertices.push_back(vertex); }

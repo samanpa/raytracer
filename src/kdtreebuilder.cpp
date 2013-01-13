@@ -1,6 +1,6 @@
 #include "kdtreebuilder.h"
 #include "kdnode.h"
-#include <iostream>
+#include "utils.h"
 
 using namespace std;
 
@@ -14,7 +14,7 @@ void kdtreebuilder::build(kdtree& kdtree, scene& scene, vec3f &lower, vec3f &upp
 	bb.lower = lower;
 	bb.upper = upper;
 	recbuild(kdtree, kdtree.allocNode(), scene, prims, bb, 1);
-	cout << "kdtree build complete " << endl;
+	INFO( "kdtree build complete ");
 }
 
 void kdtreebuilder::split(aabb& voxel, int axis, float split, 
@@ -35,17 +35,17 @@ void kdtreebuilder::recbuild(kdtree &tree, nodeid node, scene& scene
 			     , std::vector<int>& triangles, aabb& voxel
 			     , int depth) {
 	int axis = depth % 3;
-	if (triangles.size() < 5 || depth > 30) {
+	if (triangles.size() < 20 || depth > 24) {
 		tree.initLeaf(node, triangles);
 	}
 	else {
 		auto left   = tree.allocNode();
 		auto right  = tree.allocNode();
-		float splitf = (voxel.lower[axis] + voxel.upper[axis]) / 2.f;
+		float splitf = (voxel.lower[axis] + voxel.upper[axis]) * 0.5f;
 		tree.initInternalNode(node, left, axis, splitf);
 		aabb lv, rv;
 		split(voxel, axis, splitf, lv, rv);
-		
+
 		vector<int> ltris;
 		vector<int> rtris;
 		auto& v = scene.getVertices();
