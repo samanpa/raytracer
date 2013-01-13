@@ -19,6 +19,7 @@ struct triangle_barycentric {
 	int   pad2; //pad to 12 words   
 
 	void intersect(unsigned int primId, ray& ray, hit& hit);
+	void intersect(unsigned int primId, ray4& ray, hit4& hit);
 };
 
 #endif

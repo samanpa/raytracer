@@ -1,4 +1,5 @@
 #include "barycentric.h"
+#include "utils.h"
 
 int modulo3[] = {0, 1, 2, 0, 1};
 
@@ -34,6 +35,7 @@ triangle_barycentric::triangle_barycentric(vec3f &v0, vec3f &v1, vec3f &v2) {
 	p0d  = v0[k] + v0[ku]*nu + v0[kv]*nv;
 	p0u  = v0[ku];
 	p0v  = v0[kv];
+
 }
 
 void triangle_barycentric::intersect(unsigned int prim_id, ray& ray, hit& h) {
@@ -46,7 +48,7 @@ void triangle_barycentric::intersect(unsigned int prim_id, ray& ray, hit& h) {
 	float t = (p0d - o[k] - o[ku]*nu - o[kv]*nv)/nd;
 	
 	if (!(t > 0.0) || t > ray.tfar)
-		return;
+                return;
 
 	float hu = d[ku] * t - p0u + o[ku];
 	float hv = d[kv] * t - p0v + o[kv];
@@ -55,6 +57,7 @@ void triangle_barycentric::intersect(unsigned int prim_id, ray& ray, hit& h) {
 	float v = au * hv - av * hu;
 
 	float uv = u + v;
+	//(u + v) > 1.0
 	if ((unsigned int&)uv > 0x3F800000)
 		return;
 
@@ -68,3 +71,40 @@ void triangle_barycentric::intersect(unsigned int prim_id, ray& ray, hit& h) {
 	ray.tfar  = t;
 }
 
+static const ssef FLOAT4_FF = _mm_castsi128_ps(_mm_set1_epi32(0xFFFFFFFF));
+static const ssef FLOAT4_1(1.0f);
+
+
+void triangle_barycentric::intersect(unsigned int primId, ray4& ray, hit4& h) {
+	int ku = modulo3[1 + k];
+	int kv = modulo3[2 + k];
+	
+	const vec3f &o = ray.O();
+	const vec3<ssef> &d = ray.D();
+        ssef NU(nu);
+        ssef NV(nv);
+	ssef nd = d[ku] * NU + d[kv] * NV + d[k]; //N . D
+	ssef t = ssef(p0d - o[k] - o[ku]*nu - o[kv]*nv)/nd;
+	
+        ssef mask = andnot((t > _mm_setzero_ps()), FLOAT4_FF); // !(t > 0.f)
+        mask = mask | ( t > ray.tfar);        // t > ray.tfar
+
+	ssef hu = d[ku] * t + ssef(o[ku] - p0u);
+	ssef hv = d[kv] * t + ssef(o[kv] - p0v);
+
+	ssef u  = bv * hu - bu * hv;
+	ssef v  = au * hv - av * hu;
+	ssef uv = u + v;
+
+        mask = mask | ( u < _mm_setzero_ps()); // u < 0.0f
+        mask = mask | ( v < _mm_setzero_ps()); // v < 0.0f
+        mask = mask | ( uv > FLOAT4_1);        // u + v > 1.0
+
+        ssef p1  = _mm_castsi128_ps(h.prim);
+        ssef p2  = _mm_set1_ps((float&)primId);
+        h.prim   = _mm_castps_si128(ifmask(mask, p1, p2));
+	h.u      = u;
+	h.v      = v;
+	ray.tfar = ifmask(mask, ray.tfar, t);
+
+}
