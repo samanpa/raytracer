@@ -17,17 +17,17 @@ triangle_barycentric::triangle_barycentric(vec3f &v0, vec3f &v1, vec3f &v2) {
 	int ku = modulo3[1 + k];
 	int kv = modulo3[2 + k];
 	
-	au = v1[ku] - v0[ku];
-	av = v1[kv] - v0[kv];
+	e1u = v1[ku] - v0[ku];
+	e1v = v1[kv] - v0[kv];
 
-	bu = v2[ku] - v0[ku];
-	bv = v2[kv] - v0[kv];
+	e2u = v2[ku] - v0[ku];
+	e2v = v2[kv] - v0[kv];
 
-	float area = 1 / (au * bv - av * bu);
-	bu *= area;
-	bv *= area;
-	au *= area;
-	av *= area;
+	float area = 1 / (e1u * e2v - e1v * e2u);
+	e2u *= area;
+	e2v *= area;
+	e1u *= area;
+	e1v *= area;
 
 	nu   = N[ku] / N[k];
 	nv   = N[kv] / N[k];
@@ -53,8 +53,8 @@ void triangle_barycentric::intersect(unsigned int prim_id, ray& ray, hit& h) {
 	float hu = d[ku] * t - p0u + o[ku];
 	float hv = d[kv] * t - p0v + o[kv];
 
-	float u = bv * hu - bu * hv;
-	float v = au * hv - av * hu;
+	float u = e2v * hu - e2u * hv;
+	float v = e1u * hv - e1v * hu;
 
 	float uv = u + v;
 	//(u + v) > 1.0
@@ -92,8 +92,8 @@ void triangle_barycentric::intersect(unsigned int primId, ray4& ray, hit4& h) {
 	ssef hu = d[ku] * t + ssef(o[ku] - p0u);
 	ssef hv = d[kv] * t + ssef(o[kv] - p0v);
 
-	ssef u  = bv * hu - bu * hv;
-	ssef v  = au * hv - av * hu;
+	ssef u  = e2v * hu - e2u * hv;
+	ssef v  = e1u * hv - e1v * hu;
 	ssef uv = u + v;
 
         mask = mask | ( u < _mm_setzero_ps()); // u < 0.0f

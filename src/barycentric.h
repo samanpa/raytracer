@@ -11,11 +11,11 @@ struct triangle_barycentric {
 	float p0v;//p0 projection in v
 	float nu; //projected normal
 	float nv;
-	float au; //projected a (p1 - p0)
-	float av;
-	float bu; //projected b (p2 - p0);
-	float bv;
-	int   mailbox;
+	float e1u; //projected e1 (p1 - p0)
+	float e1v;
+	float e2u; //projected e2 (p2 - p0);
+	float e2v;
+	int   pad1;
 	int   pad2; //pad to 12 words   
 
 	void intersect(unsigned int primId, ray& ray, hit& hit);
