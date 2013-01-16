@@ -103,8 +103,8 @@ void triangle_barycentric::intersect(unsigned int primId, ray4& ray, hit4& h) {
         ssef p1  = _mm_castsi128_ps(h.prim);
         ssef p2  = _mm_set1_ps((float&)primId);
         h.prim   = _mm_castps_si128(ifmask(mask, p1, p2));
-	h.u      = u;
-	h.v      = v;
+	h.u      = ifmask(mask, h.u, u);
+	h.v      = ifmask(mask, h.v, v);
 	ray.tfar = ifmask(mask, ray.tfar, t);
 
 }
