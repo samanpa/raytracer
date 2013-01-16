@@ -4,11 +4,20 @@
 
 using namespace std;
 
-void kdtreebuilder::build(kdtree& kdtree, scene& scene, vec3f &lower, vec3f &upper) {
+void kdtreebuilder::build(kdtree& kdtree
+                          , const scene& scene
+                          , vec3f &lower
+                          , vec3f &upper) {
 	vector<int> prims;
 	prims.resize(scene.getTriangles().size());
-	for (size_t i = 0; i < scene.getTriangles().size(); ++i)
-		prims[i] = i;
+        _minextend.resize(scene.getTriangles().size());
+        _maxextend.resize(scene.getTriangles().size());
+
+	for (size_t i = 0; i < scene.getTriangles().size(); ++i) {
+                auto tri = scene.getTriangles()[i];
+                tri.getBounds(scene, _minextend[i], _maxextend[i]);
+                prims[i]  = i;
+        }
 
 	aabb bb;
 	bb.lower = lower;
@@ -31,7 +40,7 @@ void kdtreebuilder::split(aabb& voxel, int axis, float split,
 	left.upper[modulo3[2 + axis]] = voxel.upper[modulo3[2 + axis]]; 
 }
 
-void kdtreebuilder::recbuild(kdtree &tree, nodeid node, scene& scene
+void kdtreebuilder::recbuild(kdtree &tree, nodeid node, const scene& scene
 			     , std::vector<int>& triangles, aabb& voxel
 			     , int depth) {
 	int axis = depth % 3;
@@ -50,14 +59,10 @@ void kdtreebuilder::recbuild(kdtree &tree, nodeid node, scene& scene
 		vector<int> rtris;
 		auto& v = scene.getVertices();
 		for (auto tid : triangles) {
-			auto &t = scene.getTriangles()[tid];
-			auto &v0 = v[t.p0];
-			auto &v1 = v[t.p1];
-			auto &v2 = v[t.p2];
-			if (triangle::intersect(v0, v1, v2, lv.lower, lv.upper))
+                        if (_minextend[tid][axis] <= splitf)
 				ltris.push_back(tid);
-			if (triangle::intersect(v0, v1, v2, rv.lower, rv.upper))
-				rtris.push_back(tid);
+                        if (_maxextend[tid][axis] >= splitf)
+                                rtris.push_back(tid);
 		}
 
 		recbuild(tree, left,  scene, ltris, lv, depth + 1);

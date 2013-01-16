@@ -29,9 +29,9 @@ int main(int argc, char **argv, char **environ) {
 	camera.getLookAt().y() = 0.1;
 
 #if 0
-	scene.drawPacket(canvas);
-#else
 	scene.draw(canvas);
+#else
+	scene.draw4(canvas);
 #endif
 	if (scene._intersectCost.cnt) {
 		INFO( "Draw took "

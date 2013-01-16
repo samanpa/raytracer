@@ -2,8 +2,10 @@
 #include "ray.h"
 #include <cmath>
 #include "kdtree.h"
+#include "noaccel.h"
 #include "simdv.h"
 #include "utils.h"
+#include "shader.h"
 
 using namespace std;
 
@@ -31,32 +33,13 @@ static void getDownRight(scene &scene, canvas &canvas,
 	right= left * -leftstep;
 }
 
-void scene::shade(canvas& canvas, unsigned i, unsigned j, hit& hit)
-{
-	if (hit.prim != -1) {
-		canvas(i,j).setRed(0.5);
-		canvas(i,j).setGreen(0.5);
-		canvas(i,j).setBlue(0.5);
-	}
-}
-
-void scene::shade(canvas& canvas, ssei i, ssei j, hit4& hit4)
-{
-	hit h;
-	for (int x = 0; x < 4; ++x) {
-		h.u    = hit4.u[x];
-		h.v    = hit4.v[x];
-		h.prim = hit4.prim[x];
-		shade(canvas, i[x], j[x], h);
-	}
-}
-
 void scene::draw(canvas& canvas)
 {
 	kdtree accel(*this);
 	vec3f down, right, lefttop;
 	getDownRight(*this, canvas, down, right, lefttop);
 	vec3f leftedge (lefttop);
+        shader shader;
 
 	for (int i = 0; i < canvas.getHeight() ; ++i) {
 		vec3f pos(leftedge);
@@ -64,20 +47,20 @@ void scene::draw(canvas& canvas)
 			vec3f dir = pos - _camera.getLocation();
 			ray ray (_camera.getLocation(), dir);
 			hit h;
-			h.prim = -1; 
                         accel.draw(*this, ray, h);
-			shade(canvas, i, j, h);
+			shader.shade(*this, canvas, i, j, h);
 			pos += right;
 		}
 		leftedge += down;
 	}
 }
 
-void scene::drawPacket(canvas& canvas)
+void scene::draw4(canvas& canvas)
 {
 	kdtree accel(*this);
 	vec3f downf, rightf, lefttopf;
 	getDownRight(*this, canvas, downf, rightf, lefttopf);
+        shader shader;
 
 	vec3<ssef> lefttop = makeSimdVec(lefttopf
 					 , lefttopf + rightf
@@ -94,12 +77,11 @@ void scene::drawPacket(canvas& canvas)
 			vec3<ssef> dir(pos - loc);
 			ray4 ray (_camera.getLocation(), dir);
 			hit4 h;
-			h.prim = -1;
 			accel.draw(*this, ray, h);
-			shade(canvas
-			      , ssei(i, i, i+1, i+1)
-			      , ssei(j, j+1, j, j+1)
-			      , h);
+			shader.shade(*this, canvas
+                                     , ssei(i, i, i+1, i+1)
+                                     , ssei(j, j+1, j, j+1)
+                                     , h);
 			pos += right;
 		}
 		leftedge += down;

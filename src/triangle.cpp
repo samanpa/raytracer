@@ -1,30 +1,27 @@
 #include "triangle.h"
 #include <algorithm>
 #include <iostream>
+#include "scene.h"
 
 using namespace std;
 
-bool triangle::intersect(const vec3f &p0, const vec3f &p1, const vec3f &p2,
-			 const vec3f &lower, const vec3f &upper) {
-	vec3f pl, ph;
-	ph.x() = std::max(p0.x(), p1.x());
-	ph.x() = std::max(ph.x(), p2.x());
-	ph.y() = std::max(p0.y(), p1.y());
-	ph.y() = std::max(ph.y(), p2.y());
-	ph.z() = std::max(p0.z(), p1.z());
-	ph.z() = std::max(ph.z(), p2.z());
-	pl.x() = std::min(p0.x(), p1.x());
-	pl.x() = std::min(pl.x(), p2.x());
-	pl.y() = std::min(p0.y(), p1.y());
-	pl.y() = std::min(pl.y(), p2.y());
-	pl.z() = std::min(p0.z(), p1.z());
-	pl.z() = std::min(pl.z(), p2.z());
 
-	if (ph.x() < lower.x()) return false;
-	if (ph.y() < lower.y()) return false;
-	if (ph.z() < lower.z()) return false;
-	if (pl.x() > upper.x()) return false;
-	if (pl.y() > upper.y()) return false;
-	if (pl.z() > upper.z()) return false;
-	return true;
+void triangle::getBounds(const scene& scene, vec3f &min, vec3f &max) const {
+        const auto &vs = scene.getVertices();
+        const auto &v0 = vs[p0];
+        const auto &v1 = vs[p1];
+        const auto &v2 = vs[p2];
+
+	max.x() = std::max(v0.x(), v1.x());
+	max.x() = std::max(max.x(), v2.x());
+	max.y() = std::max(v0.y(), v1.y());
+	max.y() = std::max(max.y(), v2.y());
+	max.z() = std::max(v0.z(), v1.z());
+	max.z() = std::max(max.z(), v2.z());
+	min.x() = std::min(v0.x(), v1.x());
+	min.x() = std::min(min.x(), v2.x());
+	min.y() = std::min(v0.y(), v1.y());
+	min.y() = std::min(min.y(), v2.y());
+	min.z() = std::min(v0.z(), v1.z());
+	min.z() = std::min(min.z(), v2.z());
 }

@@ -20,13 +20,11 @@ struct scene {
 
 	camera& getCamera() { return _camera; }
 	void draw(canvas& canvas);
-	void drawPacket(canvas& canvas);
-	void shade(canvas& canvas, unsigned i, unsigned j, hit& hit);
-	void shade(canvas& canvas, ssei i, ssei j, hit4& hit);
+	void draw4(canvas& canvas);
 
 	void addNormal(vec3f& normal) { _normals.push_back(normal); }
 	void addVertex(vec3f& vertex) { _vertices.push_back(vertex); }
-	size_t getNumVertices() { return _vertices.size(); }
+	size_t getNumVertices() const { return _vertices.size(); }
 	const std::vector<triangle>& getTriangles() const { return _triangles; }
 	const std::vector<vec3f>& getVertices() const { return _vertices; }
 	bool addFace(size_t v0, size_t v1, size_t v2) {

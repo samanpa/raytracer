@@ -105,7 +105,7 @@ void kdtree::draw(scene& scene, ray& ray, hit& hit) {
 				scene._accels[t].intersect(t, ray, hit);
 			}
                         ticks end = getticks();
-                        scene._intersectCost.inc(end - start);
+                        scene._intersectCost.inc(end - start, primcount);
 
 			if (ray.tfar < texit) return;
 			if (stackptr == 0) return;
@@ -164,12 +164,6 @@ void kdtree::draw(scene& scene, ray4& r4, hit4& hit4) {
                             _mm_movemask_ps(dist4 <= (r4.D()[axis] * tentry));
 
 			int left = currNode->getLeft();
-#if 0
-                        INFO((currNode - _nodes) << 
-                             " " << left << " " << test << "["
-                             << axis << "]" << dist << " "
-                             << t << tentry << texit);
-#endif
                         // does the ray traverse both cells
                         if ((test - 1) < 14) {
                                 test = getSign(dist);
@@ -201,7 +195,7 @@ void kdtree::draw(scene& scene, ray4& r4, hit4& hit4) {
 				scene._accels[t].intersect(t, r4, hit4);
 			}
                         ticks end = getticks();
-                        scene._intersectCost.inc(end - start);
+                        scene._intersectCost.inc(end - start, primcount);
 
 			if (_mm_movemask_ps(texit < r4.tfar) == 0) return;
 

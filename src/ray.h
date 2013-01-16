@@ -10,18 +10,20 @@ struct hit {
 	int prim;
 	float u;
 	float v;
+        hit() : prim(-1){}
 };
 
 struct hit4 {
  	ssei prim;
 	ssef u;
 	ssef v;
+        hit4() : prim(-1){}
 };
 
 template <typename T>
 class rayt {
 public:
-        rayt(const vec3f& o, vec3<T>& d) :
+        rayt(const vec3f& o, const vec3<T>& d) :
 		tfar(BIG_FLOAT),
 		_orig(o),
 		_dir(d) {
