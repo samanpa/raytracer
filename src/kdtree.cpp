@@ -27,8 +27,8 @@ kdtree::kdtree(scene &scene)
 	}
 	INFO( "bounding box " << lower << " " << upper);
 	_boundingBox.init(lower, upper, scene.getCamera().getLocation());
-	kdtreebuilder builder;
-	builder.build(*this, scene, lower, upper);
+	kdtreebuilder builder(*this, scene);
+	builder.build(lower, upper);
 }
 
 nodeid kdtree::allocNode() {
@@ -39,10 +39,10 @@ nodeid kdtree::allocNode() {
 	return _numNodes++;
 }
 
-void kdtree::initLeaf(nodeid id, vector<int> &tris) {
+void kdtree::initLeaf(nodeid id, chunkmem<int> &tris) {
 	new (_nodes + id)kdnode(_prims.size(), tris.size());
-	for (auto t : tris)
-		_prims.push_back(t);
+	for (int i = tris.begin(); i < tris.end(); ++i)
+		_prims.push_back(tris[i]);
 }
 
 void kdtree::initInternalNode(nodeid id, nodeid leftChild, int axis, float split)

@@ -4,26 +4,32 @@
 
 using namespace std;
 
-void kdtreebuilder::build(kdtree& kdtree
-                          , const scene& scene
-                          , vec3f &lower
-                          , vec3f &upper) {
-	vector<int> prims;
-	prims.resize(scene.getTriangles().size());
-        _minextend.resize(scene.getTriangles().size());
-        _maxextend.resize(scene.getTriangles().size());
+kdtreebuilder::kdtreebuilder(kdtree& kdtree
+                             , const scene& scene)
+        : _kdtree(kdtree)
+        , _scene(scene)
+        , _leftchunk(scene.getTriangles().size() * 3)
+        , _rightchunk(scene.getTriangles().size() * 3)
+{
+}
 
-	for (size_t i = 0; i < scene.getTriangles().size(); ++i) {
-                auto tri = scene.getTriangles()[i];
-                tri.getBounds(scene, _minextend[i], _maxextend[i]);
-                prims[i]  = i;
+void kdtreebuilder::build(vec3f &lower, vec3f &upper)
+{
+	auto prims = _leftchunk.create();
+        int size   = _scene.getTriangles().size(); 
+        _minextend.resize(size);
+        _maxextend.resize(size);
+
+	for (int i = 0; i < size; ++i) {
+                auto tri = _scene.getTriangles()[i];
+                tri.getBounds(_scene, _minextend[i], _maxextend[i]);
+                prims.push_back(i);
         }
-
 	aabb bb;
 	bb.lower = lower;
 	bb.upper = upper;
-	recbuild(kdtree, kdtree.allocNode(), scene, prims, bb, 1);
-	INFO( "kdtree build complete ");
+	recbuild(_kdtree.allocNode(), prims, bb, 1);
+	INFO( "kdtree build complete " << size);
 }
 
 void kdtreebuilder::split(aabb& voxel, int axis, float split, 
@@ -40,32 +46,44 @@ void kdtreebuilder::split(aabb& voxel, int axis, float split,
 	left.upper[modulo3[2 + axis]] = voxel.upper[modulo3[2 + axis]]; 
 }
 
-void kdtreebuilder::recbuild(kdtree &tree, nodeid node, const scene& scene
-			     , std::vector<int>& triangles, aabb& voxel
-			     , int depth) {
-	int axis = depth % 3;
+void kdtreebuilder::findSplit (aabb &voxel, float &split, int &axis) {
+        split = (voxel.lower[axis] + voxel.upper[axis]) * 0.5f;
+}
+
+void kdtreebuilder::recbuild(nodeid node, chunkmem<int>& triangles, aabb& voxel
+			     , int depth)
+{
 	if (triangles.size() < 20 || depth > 24) {
-		tree.initLeaf(node, triangles);
+		_kdtree.initLeaf(node, triangles);
 	}
 	else {
-		auto left   = tree.allocNode();
-		auto right  = tree.allocNode();
-		float splitf = (voxel.lower[axis] + voxel.upper[axis]) * 0.5f;
-		tree.initInternalNode(node, left, axis, splitf);
+                int axis;
+                float splitf;
+                axis = depth % 3;
+                findSplit(voxel, splitf, axis);
+                splitf = (voxel.lower[axis] + voxel.upper[axis]) * 0.5f;
 		aabb lv, rv;
-		split(voxel, axis, splitf, lv, rv);
 
-		vector<int> ltris;
-		vector<int> rtris;
-		auto& v = scene.getVertices();
-		for (auto tid : triangles) {
+		auto left   = _kdtree.allocNode();
+		auto right  = _kdtree.allocNode();
+		
+		_kdtree.initInternalNode(node, left, axis, splitf);
+		split(voxel, axis, splitf, lv, rv);
+                
+		auto ltris = _leftchunk.create();
+                auto rtris = _rightchunk.create();
+		//auto& v = _scene.getVertices();
+                
+                
+		for (int i = triangles.begin(); i < triangles.end() ; ++i) {
+                        int tid = triangles[i];
                         if (_minextend[tid][axis] <= splitf)
 				ltris.push_back(tid);
                         if (_maxextend[tid][axis] >= splitf)
                                 rtris.push_back(tid);
-		}
-
-		recbuild(tree, left,  scene, ltris, lv, depth + 1);
-		recbuild(tree, right, scene, rtris, rv, depth + 1);
-	}
+                }
+                recbuild(left,  ltris, lv, depth + 1);
+                recbuild(right, rtris, rv, depth + 1);
+        }
+        triangles.destroy();
 }

@@ -4,6 +4,7 @@
 #include "box.h"
 #include "scene.h"
 #include <vector>
+#include <chunkmem.h>
 
 typedef unsigned int nodeid;
 struct kdnode;
@@ -15,7 +16,7 @@ public:
 	void draw(scene& scene, ray4& ray, hit4& hit);
 	
 	nodeid allocNode();
-	void initLeaf(nodeid id, std::vector<int> &tris);
+	void initLeaf(nodeid id, chunkmem<int> &tris);
 	void initInternalNode(nodeid id, nodeid left, int axis, float split);
 
 	int getCurrNodeId() const { return _numNodes; }

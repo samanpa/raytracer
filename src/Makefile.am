@@ -4,7 +4,7 @@ bin_PROGRAMS	= banna
 lib_LIBRARIES	= libbp_ray.a
 
 common_CXXFLAGS = -g -Wall -pedantic -O3 -pipe -march=native \
-	-std=gnu++0x -Wno-strict-aliasing
+	-std=gnu++0x -Wno-strict-aliasing -fno-omit-frame-pointer
 
 CLEANFILES              =  lexer.cc 
 
