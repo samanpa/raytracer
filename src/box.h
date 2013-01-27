@@ -7,14 +7,10 @@
 class box {
 	vec3f bounds[2];
 public:
-	void init (vec3f& lower, vec3f& upper, vec3f& orig) {
-		//translate bounds to the orig so we don't
-		// do it every time we intersect
-		bounds[0] = lower - orig;
-		bounds[1] = upper - orig;
-	}
-
+	void init (vec3f& lower, vec3f& upper, vec3f& orig);
 	bool intersect(ray &r, float& tmin, float& tmax);
-	void intersect(ray4 &r, ssef& tmin, ssef& tmax);
+	// Works only if ray in packet is travelling in the same direction
+        //    tmin and tmax are unchanged if any ray in bundle misses box
+        void intersect(ray4 &r, ssef& tmin, ssef& tmax);
 };
 #endif

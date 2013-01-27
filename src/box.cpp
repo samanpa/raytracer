@@ -1,5 +1,12 @@
 #include "box.h"
 
+void box::init (vec3f& lower, vec3f& upper, vec3f& orig) {
+        //translate bounds to the orig so we don't
+        // do it every time we intersect
+        bounds[0] = lower - orig;
+        bounds[1] = upper - orig;
+}
+
 bool box::intersect(ray &r, float& tmin, float& tmax) {
 	float tymax, tymin, tzmax, tzmin;
 	int signx = getSign(r.rcpD().x());
@@ -30,7 +37,6 @@ bool box::intersect(ray &r, float& tmin, float& tmax) {
 	return true;
 }
 
-//Works only if ray in packet is travelling in the same direction
 void box::intersect(ray4 &r, ssef& tnear, ssef& tfar) {
 	ssef tymax, tymin, tzmax, tzmin, mask, mask2, tmin, tmax;
 
