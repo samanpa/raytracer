@@ -8,6 +8,13 @@ class vec {
         T* _data;
         int _curr;
         int _max;
+
+        void grow() {
+                if (_curr == _max) {
+                        _max *= 2;
+                        _data = (T*)realloc(_data, _max * sizeof(T));
+                }
+        }
 public:
         vec(int s)
                 : _data((T*)malloc(s *sizeof(T)))
@@ -19,15 +26,16 @@ public:
         }
         
         void push_back(T& t) {
-                if (_curr == _max) {
-                        INFO("grow " << _data);
-                        _max *= 2;
-                        _data = (T*)realloc(_data, _max * sizeof(T));
-                        INFO(" after " << _data);
-                }
+                grow();
                 _data[_curr++] = t;
         }
         
+        void push_back(T&& t) {
+                grow();
+                _data[_curr++] = t;
+        }
+        
+        T* data() { return _data; }
         const T& operator[](int i) { return _data[i]; }
         int size() const { return _curr; }
         void resize(int newsize) { _curr = newsize; }
@@ -45,7 +53,7 @@ public:
                 , _start(vec.size())
                 , _end(vec.size())
                 , _id(id) {}
-
+        
         void destroy() {
                 if (_end != _data.size()) {
                         INFO(_id << " " <<_end << " " << _data.size());
@@ -53,15 +61,15 @@ public:
                 }
                 _data.resize(_start);
         }
-
+        
         void push_back(T& item) {
                 _data.push_back(item);
                 _end = _data.size();
         }
-
+        
         const T& operator[](int i) { return _data[i]; }
-        int begin() const { return _start; }
-        int end() const { return _end; }
+        T* begin() const { return _data.data() + _start; }
+        T* end() const { return _data.data() + _end; }
         int size() const { return _end - _start; }
         int id() const { return _id; }
 };

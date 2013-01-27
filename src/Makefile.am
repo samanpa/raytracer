@@ -12,7 +12,7 @@ libbp_ray_a_CXXFLAGS 	= $(common_CXXFLAGS)
 libbp_ray_a_SOURCES	= lexer.ll parser.cpp io.cpp \
 			triangle.cpp barycentric.cpp \
 			utils.cpp box.cpp kdtree.cpp kdtreebuilder.cpp \
-			shader.cpp canvas.cpp scene.cpp 
+			shader.cpp canvas.cpp scene.cpp ui.cpp
 
 banna_CXXFLAGS 		= $(common_CXXFLAGS)
 banna_SOURCES 		= banna.cpp
