@@ -26,6 +26,7 @@ struct scene {
 	void draw4(T& accel, canvas& canvas);
 
 	void addNormal(vec3f& normal) { _normals.push_back(normal); }
+        const vec3f& getNormal(size_t v) const { return _normals[v]; }
 	void addVertex(vec3f& vertex) { _vertices.push_back(vertex); }
 	size_t getNumVertices() const { return _vertices.size(); }
 	const std::vector<triangle>& getTriangles() const { return _triangles; }

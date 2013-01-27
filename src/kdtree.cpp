@@ -135,8 +135,8 @@ void kdtree::draw(scene& scene, ray4& r4, hit4& hit4) {
                         draw(scene, ray, hit[i]);
                 }
                 hit4.prim = ssei(hit[0].prim, hit[1].prim, hit[2].prim, hit[3].prim);
-                hit4.u    = ssef(hit[0].u, hit[1].u, hit[2].u, hit[3].u);
                 hit4.v    = ssef(hit[0].v, hit[1].v, hit[2].v, hit[3].v);
+                hit4.w    = ssef(hit[0].v, hit[1].w, hit[2].w, hit[3].w);
                 return;
         }
 

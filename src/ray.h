@@ -8,15 +8,15 @@
 
 struct hit {
 	int prim;
-	float u;
 	float v;
+	float w;
         hit() : prim(-1){}
 };
 
 struct hit4 {
  	ssei prim;
-	ssef u;
 	ssef v;
+	ssef w;
         hit4() : prim(-1){}
 };
 

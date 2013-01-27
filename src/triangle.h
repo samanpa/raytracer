@@ -12,7 +12,7 @@ public:
 		{}
 	
         void getBounds(const scene& scene, vec3f &min, vec3f &max) const;
-
+        vec3f getSmoothNormal(const scene& scene, float v, float w) const;
 	const int p0;
 	const int p1;
 	const int p2;

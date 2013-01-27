@@ -1,19 +1,23 @@
 #include "shader.h"
 
 void shader::shade(scene& scene
+                   , ray &ray
                    , canvas& canvas
                    , unsigned i
                    , unsigned j
                    , hit& hit)
 {
 	if (hit.prim != -1) {
-		canvas.get(i,j).setRed(0.5);
-		canvas.get(i,j).setGreen(0.5);
-		canvas.get(i,j).setBlue(0.5);
+                auto normal = scene.getTriangles()[hit.prim].getSmoothNormal(scene, hit.v, hit.w);
+                float phong = fabs(dot(ray.D(), normal));
+		canvas.get(i,j).setRed(phong);
+		canvas.get(i,j).setGreen(phong);
+		canvas.get(i,j).setBlue(phong);
 	}
 }
 
 void shader::shade(scene &scene
+                   , ray4 &r4
                    , canvas& canvas
                    , ssei i
                    , ssei j
@@ -21,10 +25,13 @@ void shader::shade(scene &scene
 {
 	hit h;
 	for (int x = 0; x < 4; ++x) {
-		h.u    = hit4.u[x];
+                vec3f d(r4.D().x()[x], r4.D().y()[x], r4.D().z()[x]);
+                ray ray(r4.O(), d);
+
 		h.v    = hit4.v[x];
+		h.w    = hit4.w[x];
 		h.prim = hit4.prim[x];
-		shade(scene, canvas, i[x], j[x], h);
+		shade(scene, ray, canvas, i[x], j[x], h);
 	}
 }
 

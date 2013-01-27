@@ -50,7 +50,7 @@ void scene::draw(T& accel, canvas& canvas)
 			ray ray (_camera.getLocation(), dir);
 			hit h;
                         accel.draw(*this, ray, h);
-			shader.shade(*this, canvas, i, j, h);
+			shader.shade(*this, ray, canvas, i, j, h);
 			pos += right;
 		}
 		leftedge += down;
@@ -82,7 +82,7 @@ void scene::draw4(T& accel, canvas& canvas)
 			ray4 ray (_camera.getLocation(), dir);
 			hit4 h;
 			accel.draw(*this, ray, h);
-			shader.shade(*this, canvas
+			shader.shade(*this, ray, canvas
                                      , ssei(i, i, i+1, i+1)
                                      , ssei(j, j+1, j, j+1)
                                      , h);

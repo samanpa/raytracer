@@ -25,3 +25,13 @@ void triangle::getBounds(const scene& scene, vec3f &min, vec3f &max) const {
 	min.z() = std::min(v0.z(), v1.z());
 	min.z() = std::min(min.z(), v2.z());
 }
+
+vec3f triangle::getSmoothNormal(const scene& scene, float v, float w) const {
+        const auto& n0 = scene.getNormal(p0);
+        const auto& n1 = scene.getNormal(p1);
+        const auto& n2 = scene.getNormal(p2);
+
+        vec3f normal = (1 - v - w) * n0 + v * n1  + w * n2;
+        normalize(normal);
+        return normal;
+}
