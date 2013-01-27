@@ -33,9 +33,9 @@ static void getDownRight(scene &scene, canvas &canvas,
 	right= left * -leftstep;
 }
 
-void scene::draw(canvas& canvas)
+template <typename T>
+void scene::draw(T& accel, canvas& canvas)
 {
-	kdtree accel(*this);
 	vec3f down, right, lefttop;
 	getDownRight(*this, canvas, down, right, lefttop);
 	vec3f leftedge (lefttop);
@@ -55,9 +55,9 @@ void scene::draw(canvas& canvas)
 	}
 }
 
-void scene::draw4(canvas& canvas)
+template <typename T>
+void scene::draw4(T& accel, canvas& canvas)
 {
-	kdtree accel(*this);
 	vec3f downf, rightf, lefttopf;
 	getDownRight(*this, canvas, downf, rightf, lefttopf);
         shader shader;
@@ -88,3 +88,7 @@ void scene::draw4(canvas& canvas)
 	}
 }
 
+template void scene::draw<kdtree>(kdtree& accel, canvas& canvas);
+template void scene::draw4<kdtree>(kdtree& accel, canvas& canvas);
+template void scene::draw<noaccel>(noaccel& accel, canvas& canvas);
+template void scene::draw4<noaccel>(noaccel& accel, canvas& canvas);

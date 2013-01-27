@@ -19,8 +19,10 @@ struct scene {
 	statistic _intersectCost;
 
 	camera& getCamera() { return _camera; }
-	void draw(canvas& canvas);
-	void draw4(canvas& canvas);
+        template <class T>
+	void draw(T& accel, canvas& canvas);
+        template <class T>
+	void draw4(T& accel, canvas& canvas);
 
 	void addNormal(vec3f& normal) { _normals.push_back(normal); }
 	void addVertex(vec3f& vertex) { _vertices.push_back(vertex); }

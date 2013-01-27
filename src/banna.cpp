@@ -3,6 +3,8 @@
 #include "parser.h"
 #include "io.h"
 #include "utils.h"
+#include "kdtree.h"
+#include "noaccel.h"
 
 using namespace std;
 
@@ -28,10 +30,11 @@ int main(int argc, char **argv, char **environ) {
 	camera.getAngle() = 15;
 	camera.getLookAt().y() = 0.1;
 
+	kdtree accel(scene);
 #if 0
-	scene.draw(canvas);
+	scene.draw(accel, canvas);
 #else
-	scene.draw4(canvas);
+	scene.draw4(accel, canvas);
 #endif
 	if (scene._intersectCost.cnt) {
 		INFO( "Draw took "
@@ -39,6 +42,7 @@ int main(int argc, char **argv, char **environ) {
 		      << "cycles per pixel " << scene._intersectCost.cnt);
 	} else
                 INFO("Draw done");
+
 	canvas.save("image.png");
 
 }
