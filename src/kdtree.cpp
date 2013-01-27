@@ -27,6 +27,10 @@ kdtree::kdtree(scene &scene)
 	}
 	INFO( "bounding box " << lower << " " << upper);
 	_boundingBox.init(lower, upper, scene.getCamera().getLocation());
+
+        nodeid dummyNode = allocNode();
+        initLeaf(dummyNode, 0);
+
 	kdtreebuilder builder(*this, scene);
 	builder.build(lower, upper);
 }
@@ -39,10 +43,8 @@ nodeid kdtree::allocNode() {
 	return _numNodes++;
 }
 
-void kdtree::initLeaf(nodeid id, chunkmem<int> &tris) {
-	new (_nodes + id)kdnode(_prims.size(), tris.size());
-	for (int i = tris.begin(); i < tris.end(); ++i)
-		_prims.push_back(tris[i]);
+void kdtree::initLeaf(nodeid id, int numPrims) {
+	new (_nodes + id)kdnode(_prims.size(), numPrims);
 }
 
 void kdtree::initInternalNode(nodeid id, nodeid leftChild, int axis, float split)
@@ -54,6 +56,7 @@ struct stackitem {
 	int node;
 	float texit;
 };
+
 //Maximum number of items we can store on the stack is the depth of the tree
 //    and a tree of depth 64 should be plenty deep
 static const int MAX_STACK_SIZE = 64;
@@ -61,14 +64,14 @@ void kdtree::draw(scene& scene, ray& ray, hit& hit) {
 	float tentry, texit;
 	if (!_boundingBox.intersect(ray, tentry, texit))
 		return;
-
-#if 0
-        //ray.tfar = texit;
-#endif
+        ray.tfar = texit;
 	if (tentry < 0.f) tentry = 0.f;
 	stackitem stack[MAX_STACK_SIZE];
-	uint32_t stackptr = 0;
-	kdnode* currNode = _nodes;
+        //push dummy element
+        stack[0].node  = 0;
+        stack[0].texit = BPRAY_INF;
+	uint32_t stackptr = 1;
+	kdnode* currNode = _nodes + 1;
 
 	while (true) {	
 		if (!currNode->isLeaf()) {
@@ -99,16 +102,12 @@ void kdtree::draw(scene& scene, ray& ray, hit& hit) {
 			int primidx   = currNode->getPrimitiveOffset();
 			int primcount = currNode->getNumPrims();
 
-                        ticks start = getticks();
 			for (int i = 0; i != primcount; ++i) {
 				int t = _prims[primidx + i];
 				scene._accels[t].intersect(t, ray, hit);
 			}
-                        ticks end = getticks();
-                        scene._intersectCost.inc(end - start, primcount);
 
 			if (ray.tfar < texit) return;
-			if (stackptr == 0) return;
 			
 			--stackptr;
                         tentry   = texit;
@@ -143,6 +142,7 @@ void kdtree::draw(scene& scene, ray4& r4, hit4& hit4) {
 
         ssef tentry(_mm_setzero_ps());
         ssef texit(_mm_setzero_ps());
+        //tentry and texit will be unchanged if ray misses the box
         _boundingBox.intersect(r4, tentry, texit);
 	
         if (_mm_movemask_ps(tentry == texit) == 0xF)
@@ -150,10 +150,14 @@ void kdtree::draw(scene& scene, ray4& r4, hit4& hit4) {
 
         ssef far[MAX_STACK_SIZE];
         int  nodes[MAX_STACK_SIZE];
-	uint32_t stackptr = 0;
-	kdnode* currNode = _nodes;
-        
 
+        //push dummyNode onto stack which will cause us to exit
+        nodes[0] = 0;
+        far[0]  = BPRAY_INF;
+
+	uint32_t stackptr = 1;
+	kdnode* currNode = _nodes + 1;
+        
 	while (true) {	
                 if (!currNode->isLeaf()) {
 			int axis  = currNode->getAxis();
@@ -164,7 +168,7 @@ void kdtree::draw(scene& scene, ray4& r4, hit4& hit4) {
                             _mm_movemask_ps(dist4 <= (r4.D()[axis] * tentry));
 
 			int left = currNode->getLeft();
-                        // does the ray traverse both cells
+                        // does the ray bundle traverse both cells
                         if ((test - 1) < 14) {
                                 test = getSign(dist);
                   
@@ -183,24 +187,21 @@ void kdtree::draw(scene& scene, ray4& r4, hit4& hit4) {
                                         texit = _mm_min_ps(texit, t);
                                 }
                                 currNode = _nodes + left + test;
-                        }
-                        
+                        }                       
                 } else {
 			int primidx   = currNode->getPrimitiveOffset();
 			int primcount = currNode->getNumPrims();
 
-                        ticks start = getticks();
 			for (int i = 0; i != primcount; ++i) {
 				int t = _prims[primidx + i];
+                                //prefetch
+                                int t2 = _prims[primidx + i + 1];
+                                _mm_prefetch((char*)&scene._accels[t2], _MM_HINT_T0);
 				scene._accels[t].intersect(t, r4, hit4);
-			}
-                        ticks end = getticks();
-                        scene._intersectCost.inc(end - start, primcount);
+                        }
 
 			if (_mm_movemask_ps(texit < r4.tfar) == 0) return;
-
-			if (stackptr == 0) return;
-			
+                        			
 			--stackptr;
                         tentry   = _mm_max_ps(tentry, texit);
 			currNode = nodes[stackptr] + _nodes;

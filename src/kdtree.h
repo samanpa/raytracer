@@ -16,7 +16,7 @@ public:
 	void draw(scene& scene, ray4& ray, hit4& hit);
 	
 	nodeid allocNode();
-	void initLeaf(nodeid id, chunkmem<int> &tris);
+	void initLeaf(nodeid id, int numPrims);
 	void initInternalNode(nodeid id, nodeid left, int axis, float split);
 
 	int getCurrNodeId() const { return _numNodes; }
