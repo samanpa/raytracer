@@ -71,15 +71,13 @@ void triangle_barycentric::intersect(unsigned int prim_id, ray& ray, hit& h) {
 	ray.tfar  = t;
 }
 
-static const ssef FLOAT4_FF = _mm_castsi128_ps(_mm_set1_epi32(0xFFFFFFFF));
-static const ssef FLOAT4_1(1.0f);
-
-
 void triangle_barycentric::intersect(unsigned int primId, ray4& ray, hit4& h) {
 	int ku = modulo3[1 + k];
 	int kv = modulo3[2 + k];
 	
-	const vec3f &o = ray.O();
+        const ssef FLOAT4_FF = _mm_castsi128_ps(_mm_set1_epi32(0xFFFFFFFF));
+        const ssef FLOAT4_1(1.0f);
+        const vec3f &o = ray.O();
 	const vec3<ssef> &d = ray.D();
         ssef NU(nu);
         ssef NV(nv);
