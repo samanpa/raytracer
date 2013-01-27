@@ -17,6 +17,7 @@ struct scene {
 	std::vector<triangle> _triangles;
 	std::vector<triangle_barycentric> _accels;
 	statistic _intersectCost;
+	statistic _rayCount;
 
 	camera& getCamera() { return _camera; }
         template <class T>

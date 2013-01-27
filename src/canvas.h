@@ -6,7 +6,7 @@
 class canvas {
 public:
 	canvas (short height, short width);
-	color& operator ()(short h, short w) {
+	color& get(short h, short w) {
 		return _colors[h][w];
 	}
 	int getWidth() { return _width; }

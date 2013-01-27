@@ -40,10 +40,12 @@ void scene::draw(T& accel, canvas& canvas)
 	getDownRight(*this, canvas, down, right, lefttop);
 	vec3f leftedge (lefttop);
         shader shader;
+        _rayCount.reset();
 
 	for (int i = 0; i < canvas.getHeight() ; ++i) {
 		vec3f pos(leftedge);
 		for (int j = 0; j < canvas.getWidth(); ++j) {
+                        _rayCount.inc(1);
 			vec3f dir = pos - _camera.getLocation();
 			ray ray (_camera.getLocation(), dir);
 			hit h;
@@ -70,10 +72,12 @@ void scene::draw4(T& accel, canvas& canvas)
 	vec3<ssef> right = makeSimdVec(rightf + rightf);
 	vec3<ssef> loc   = makeSimdVec(_camera.getLocation());
 	vec3<ssef> leftedge (lefttop);
+        _rayCount.reset();
 
 	for (int i = 0; i < canvas.getHeight() ; i += 2) {
 		vec3<ssef> pos(leftedge);
 		for (int j = 0; j < canvas.getWidth(); j += 2) {
+                        _rayCount.inc(4);
 			vec3<ssef> dir(pos - loc);
 			ray4 ray (_camera.getLocation(), dir);
 			hit4 h;

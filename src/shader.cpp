@@ -7,9 +7,9 @@ void shader::shade(scene& scene
                    , hit& hit)
 {
 	if (hit.prim != -1) {
-		canvas(i,j).setRed(0.5);
-		canvas(i,j).setGreen(0.5);
-		canvas(i,j).setBlue(0.5);
+		canvas.get(i,j).setRed(0.5);
+		canvas.get(i,j).setGreen(0.5);
+		canvas.get(i,j).setBlue(0.5);
 	}
 }
 
