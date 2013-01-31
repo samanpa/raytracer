@@ -13,7 +13,7 @@
 struct scene {
 	camera _camera;
 	std::vector<vec3f>    _vertices;
-	std::vector<vec3f>    _normals;
+	std::vector<ssef>    _normals;
 	std::vector<triangle> _triangles;
 	std::vector<triangle_barycentric> _accels;
 	statistic _intersectCost;
@@ -25,8 +25,8 @@ struct scene {
         template <class T>
 	void draw4(T& accel, canvas& canvas);
 
-	void addNormal(vec3f& normal) { _normals.push_back(normal); }
-        const vec3f& getNormal(size_t v) const { return _normals[v]; }
+        void addNormal(vec3f& n) { _normals.push_back(ssef(n.x(), n.y(), n.z(), 0.f)); }
+        const ssef& getNormal(size_t v) const { return _normals[v]; }
 	void addVertex(vec3f& vertex) { _vertices.push_back(vertex); }
 	size_t getNumVertices() const { return _vertices.size(); }
 	const std::vector<triangle>& getTriangles() const { return _triangles; }

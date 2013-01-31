@@ -2,6 +2,7 @@
 #define BPRAY_TRIANGLE_H
 
 #include <vec3.h>
+#include "simd/simd.h"
 
 class scene;
 
@@ -12,7 +13,7 @@ public:
 		{}
 	
         void getBounds(const scene& scene, vec3f &min, vec3f &max) const;
-        vec3f getSmoothNormal(const scene& scene, float v, float w) const;
+        ssef getSmoothNormal(const scene& scene, float v, float w) const;
 	const int p0;
 	const int p1;
 	const int p2;

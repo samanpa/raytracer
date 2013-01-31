@@ -8,9 +8,15 @@ void shader::shade(scene& scene
                    , hit& hit)
 {
 	if (hit.prim != -1) {
+#if 0
                 auto normal = scene.getTriangles()[hit.prim].getSmoothNormal(scene, hit.v, hit.w);
-                float phong = fabs(dot(ray.D(), normal));
-		canvas.get(i,j).setRed(phong);
+                ssef dir(ray.D().x(), ray.D().y(), ray.D().z(), 0.0);
+                ssef dp = _mm_dp_ps(dir, normal, 0x7f);
+                float phong = fabs(dp[0]);
+#else
+                float phong = 0.5;
+#endif
+ 		canvas.get(i,j).setRed(phong);
 		canvas.get(i,j).setGreen(phong);
 		canvas.get(i,j).setBlue(phong);
 	}
