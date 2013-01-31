@@ -72,7 +72,8 @@ void kdtree::draw(scene& scene, ray& ray, hit& hit) {
         stack[0].texit = BPRAY_INF;
 	uint32_t stackptr = 1;
 	kdnode* currNode = _nodes + 1;
-
+        static uint64_t rayid = 0;
+        ++rayid;
 	while (true) {	
 		if (!currNode->isLeaf()) {
 			int axis = currNode->getAxis();
@@ -104,8 +105,17 @@ void kdtree::draw(scene& scene, ray& ray, hit& hit) {
 
 			for (int i = 0; i != primcount; ++i) {
 				int t = _prims[primidx + i];
+                                //prefetch
+                                int t2 = _prims[primidx + i + 1];
+                                _mm_prefetch((char*)&scene._accels[t2], _MM_HINT_T0);
+
+                                //mailboxing
+                                if (scene._accels[t].pad1 == rayid)
+                                        continue;
+
 				scene._accels[t].intersect(t, ray, hit);
-			}
+                                scene._accels[t].pad1 = rayid;
+                        }
 
 			if (ray.tfar < texit) return;
 			
@@ -157,7 +167,9 @@ void kdtree::draw(scene& scene, ray4& r4, hit4& hit4) {
 
 	uint32_t stackptr = 1;
 	kdnode* currNode = _nodes + 1;
-        
+
+        static uint64_t rayid = 0;
+        ++rayid;
 	while (true) {	
                 if (!currNode->isLeaf()) {
 			int axis  = currNode->getAxis();
@@ -194,10 +206,15 @@ void kdtree::draw(scene& scene, ray4& r4, hit4& hit4) {
 
 			for (int i = 0; i != primcount; ++i) {
 				int t = _prims[primidx + i];
+
                                 //prefetch
                                 int t2 = _prims[primidx + i + 1];
                                 _mm_prefetch((char*)&scene._accels[t2], _MM_HINT_T0);
+                                 //mailboxing
+                                if (scene._accels[t].pad1 == rayid)
+                                        continue;
 				scene._accels[t].intersect(t, r4, hit4);
+                                scene._accels[t].pad1 = rayid;
                         }
 
 			if (_mm_movemask_ps(texit < r4.tfar) == 0) return;
