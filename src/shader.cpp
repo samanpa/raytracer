@@ -8,11 +8,11 @@ void shader::shade(scene& scene
                    , hit& hit)
 {
 	if (hit.prim != -1) {
-#if 0
-                auto normal = scene.getTriangles()[hit.prim].getSmoothNormal(scene, hit.v, hit.w);
+#if 1
+                ssef normal = scene.getTriangles()[hit.prim].getSmoothNormal(scene, hit.u, hit.v);
                 ssef dir(ray.D().x(), ray.D().y(), ray.D().z(), 0.0);
                 ssef dp = _mm_dp_ps(dir, normal, 0x7f);
-                float phong = fabs(dp[0]);
+                float phong = -dp[0];
 #else
                 float phong = 0.5;
 #endif
@@ -35,7 +35,7 @@ void shader::shade(scene &scene
                 ray ray(r4.O(), d);
 
 		h.v    = hit4.v[x];
-		h.w    = hit4.w[x];
+		h.u    = hit4.u[x];
 		h.prim = hit4.prim[x];
 		shade(scene, ray, canvas, i[x], j[x], h);
 	}

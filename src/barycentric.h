@@ -5,16 +5,16 @@
 
 struct triangle_barycentric {
 	triangle_barycentric (vec3f &v0, vec3f &v1, vec3f &v2);
-	int   k;  //projection plane
-	float p0d;//p0 . N
-	float p0v;//p0 projection in v
-	float p0w;//p0 projection in w
-	float nv; //projected normal
-	float nw;
-	float e1v; //projected e1 (p1 - p0)
-	float e1w;
-	float e2v; //projected e2 (p2 - p0);
-	float e2w;
+	int   k;    //projection plane
+	float p2d;  //v2 . N
+	float p2u;  //v2 projection in u
+	float p2v;  //v2 projection in v
+	float nu;   //projected normal
+	float nv;
+	float e0u;  //projected e0 (v0 - v2)
+	float e0v;
+	float e1u;  //projected e1 (v1 - v2);
+	float e1v;
 	int   pad1;
 	int   pad2; //pad to 12 words   
 

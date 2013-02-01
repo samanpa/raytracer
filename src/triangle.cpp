@@ -26,12 +26,12 @@ void triangle::getBounds(const scene& scene, vec3f &min, vec3f &max) const {
 	min.z() = std::min(min.z(), v2.z());
 }
 
-ssef triangle::getSmoothNormal(const scene& scene, float v, float w) const {
+ssef triangle::getSmoothNormal(const scene& scene, float u, float v) const {
         const auto& n0 = scene.getNormal(p0);
         const auto& n1 = scene.getNormal(p1);
         const auto& n2 = scene.getNormal(p2);
 
-        ssef n  = (1 - v - w) * n0 + v * n1  + w * n2;
+        ssef n  = u * n0 + v * n1  + (1 - u - v) * n2;
         ssef dp = _mm_dp_ps(n, n, 0x7F);
 #if 0
         ssef nn = rcp(dp * dp) * n; // approximate normalized normal
