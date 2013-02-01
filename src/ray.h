@@ -8,26 +8,26 @@
 
 struct hit {
 	int prim;
+	float u;
 	float v;
-	float w;
         hit() : prim(-1){}
 };
 
 struct hit4 {
  	ssei prim;
+	ssef u;
 	ssef v;
-	ssef w;
         hit4() : prim(-1){}
 };
 
 template <typename T>
 class rayt {
 public:
+        //d must be normalized
         rayt(const vec3f& o, const vec3<T>& d) :
 		tfar(BIG_FLOAT),
 		_orig(o),
 		_dir(d) {
-		normalize(_dir);
 		_invdir = rcp(_dir);
 	}
 

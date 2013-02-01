@@ -47,6 +47,7 @@ void scene::draw(T& accel, canvas& canvas)
 		for (int j = 0; j < canvas.getWidth(); ++j) {
                         _rayCount.inc(1);
 			vec3f dir = pos - _camera.getLocation();
+                        normalize(dir);
 			ray ray (_camera.getLocation(), dir);
 			hit h;
                         accel.draw(*this, ray, h);
@@ -79,6 +80,7 @@ void scene::draw4(T& accel, canvas& canvas)
 		for (int j = 0; j < canvas.getWidth(); j += 2) {
                         _rayCount.inc(4);
 			vec3<ssef> dir(pos - loc);
+                        normalize(dir);
 			ray4 ray (_camera.getLocation(), dir);
 			hit4 h;
 			accel.draw(*this, ray, h);
