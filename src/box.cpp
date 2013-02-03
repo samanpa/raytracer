@@ -1,6 +1,6 @@
 #include "box.h"
 
-void box::init (vec3f& lower, vec3f& upper, vec3f& orig) {
+void box::init (const vec3f& lower, const vec3f& upper, const vec3f& orig) {
         //translate bounds to the orig so we don't
         // do it every time we intersect
         bounds[0] = lower - orig;
