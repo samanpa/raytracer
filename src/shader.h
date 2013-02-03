@@ -8,15 +8,12 @@ class shader {
 public:
 	void shade(scene &scene
                    , ray &ray
-                   , canvas& canvas
-                   , unsigned i
-                   , unsigned j
+                   , color &color
                    , hit& hit);
+
 	void shade(scene &scene
                    , ray4 &ray
-                   , canvas& canvas
-                   , ssei i
-                   , ssei j
+                   , color color[4]
                    , hit4& hit);
 };
 

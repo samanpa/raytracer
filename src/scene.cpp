@@ -6,6 +6,7 @@
 #include "simdv.h"
 #include "utils.h"
 #include "shader.h"
+#include "color.h"
 
 using namespace std;
 
@@ -51,7 +52,7 @@ void scene::draw(T& accel, canvas& canvas)
 			ray ray (_camera.getLocation(), dir);
 			hit h;
                         accel.draw(*this, ray, h);
-			shader.shade(*this, ray, canvas, i, j, h);
+			shader.shade(*this, ray, canvas.get(i, j), h);
 			pos += right;
 		}
 		leftedge += down;
@@ -64,6 +65,7 @@ void scene::draw4(T& accel, canvas& canvas)
 	vec3f downf, rightf, lefttopf;
 	getDownRight(*this, canvas, downf, rightf, lefttopf);
         shader shader;
+        color colors[4];
 
 	vec3<ssef> lefttop = makeSimdVec(lefttopf
 					 , lefttopf + rightf
@@ -84,10 +86,11 @@ void scene::draw4(T& accel, canvas& canvas)
 			ray4 ray (_camera.getLocation(), dir);
 			hit4 h;
 			accel.draw(*this, ray, h);
-			shader.shade(*this, ray, canvas
-                                     , ssei(i, i, i+1, i+1)
-                                     , ssei(j, j+1, j, j+1)
-                                     , h);
+			shader.shade(*this, ray, colors, h);
+                        canvas.get(i  , j  ) = colors[0];
+                        canvas.get(i  , j+1) = colors[1];
+                        canvas.get(i+1, j  ) = colors[2];
+                        canvas.get(i+1, j+1) = colors[3];
 			pos += right;
 		}
 		leftedge += down;

@@ -32,7 +32,7 @@ ssef triangle::getSmoothNormal(const scene& scene, float u, float v) const {
         const auto& n2 = scene.getNormal(p2);
 
         ssef n  = u * n0 + v * n1  + (1 - u - v) * n2;
-        ssef dp = _mm_dp_ps(n, n, 0x7F);
+        ssef dp = _mm_dp_ps(n, n, 0x77);
 #if 0
         ssef nn = rcp(dp * dp) * n; // approximate normalized normal
 #else

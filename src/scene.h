@@ -2,7 +2,6 @@
 #define BPRAY_SCENE_H
 
 #include "canvas.h"
-#include "color.h"
 #include "camera.h"
 #include "triangle.h"
 #include "barycentric.h"
