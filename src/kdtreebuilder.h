@@ -5,22 +5,12 @@
 #include "scene.h"
 #include <vector>
 #include "chunkmem.h"
-
-struct aabb {
-	vec3f lower;
-	vec3f upper;
-
-        float getArea()
-        {
-                vec3f d(upper - lower);
-                return 2 * (d.x() * d.y() + d.y() * d.z() + d.z() * d.x());
-        }
-};
+#include "aabb.h"
 
 enum class splittype : char{
-        Start,
         End,
-        Planar        
+        Planar,
+        Start       
 };
 
 struct splitevent {
@@ -28,6 +18,12 @@ struct splitevent {
         float pos;
         char axis;
         splittype type;
+        bool operator < (const splitevent& s) {
+                if (s.pos < pos) return true;
+                if (s.pos == pos) return (int)type < (int)s.type;
+                return false;
+        }
+
         splitevent(int tri, float pos, char axis, splittype type) :
                 tri(tri), pos(pos), axis(axis), type(type) {}
 };
@@ -37,16 +33,14 @@ class kdtreebuilder {
         const scene& _scene;
         std::vector<vec3f> _maxextend;
         std::vector<vec3f> _minextend;
-        chunkmemmanager<splitevent> _leftchunk;
-        chunkmemmanager<splitevent> _rightchunk;
-        chunkmemmanager<splitevent> _bothchunk;
+        chunkmemmanager<splitevent> _leftprims;
+        chunkmemmanager<splitevent> _rightprims;
+        chunkmemmanager<splitevent> _bothprims;
         
         static const int INTERSECT_COST = 50;
         static const int TRAVERSAL_COST = 30;
-public:
-        kdtreebuilder(kdtree& kdtree, const scene& scene);
-        void build(vec3f& lower, vec3f& upper);
-        float findSplit (aabb &voxel, chunkmem<splitevent>& tri, float &split, int &axis);
+
+        bool findSplitPlane (aabb &voxel, chunkmem<splitevent>& tri, float &split, int &axis);
 	static void split(aabb& bb, int axis, float split, aabb& left, aabb&right);
 	void recbuild(nodeid node, chunkmem<splitevent>& triangles, aabb& voxel);
         
@@ -57,7 +51,10 @@ public:
                         mult = 0.8f;
                 return mult * (TRAVERSAL_COST + INTERSECT_COST * (pl * nl + pr * nr));
         }
-                
+
+public:
+        kdtreebuilder(kdtree& kdtree, const scene& scene);
+        void build(vec3f& lower, vec3f& upper);              
 };
 
 #endif

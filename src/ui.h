@@ -22,6 +22,8 @@ public:
         void draw();
         void drawScene();
         void renderCanvas();
+
+        camera& getCamera() { return _scene.getCamera(); }
 };
 
 #endif

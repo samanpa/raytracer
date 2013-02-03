@@ -1,8 +1,8 @@
 #ifndef BPRAY_TRIANGLE_H
 #define BPRAY_TRIANGLE_H
 
-#include <vec3.h>
 #include "simd/simd.h"
+#include "aabb.h"
 
 class scene;
 
@@ -14,6 +14,7 @@ public:
 	
         void getBounds(const scene& scene, vec3f &min, vec3f &max) const;
         ssef getSmoothNormal(const scene& scene, float v, float w) const;
+        void clip(const scene& scene, aabb& left, aabb& right, float split, int axis) const;
 	const int p0;
 	const int p1;
 	const int p2;

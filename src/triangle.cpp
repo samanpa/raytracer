@@ -7,10 +7,9 @@ using namespace std;
 
 
 void triangle::getBounds(const scene& scene, vec3f &min, vec3f &max) const {
-        const auto &vs = scene.getVertices();
-        const auto &v0 = vs[p0];
-        const auto &v1 = vs[p1];
-        const auto &v2 = vs[p2];
+        const auto &v0 = scene.getVertex(p0);
+        const auto &v1 = scene.getVertex(p1);
+        const auto &v2 = scene.getVertex(p2);
 
 	max.x() = std::max(v0.x(), v1.x());
 	max.x() = std::max(max.x(), v2.x());
@@ -40,3 +39,14 @@ ssef triangle::getSmoothNormal(const scene& scene, float u, float v) const {
 #endif
         return nn;
 }
+
+void triangle::clip(const scene &scene, aabb& left, aabb& right, float splitf, int axis) const {
+        const auto &v0 = scene.getVertex(p0);
+        const auto &v1 = scene.getVertex(p1);
+        const auto &v2 = scene.getVertex(p2);
+        
+        ssef split(splitf);
+        ssef v(v0[axis], v1[axis], v2[axis], 0);
+        
+}
+

@@ -29,6 +29,7 @@ struct scene {
 	void addVertex(vec3f& vertex) { _vertices.push_back(vertex); }
 	size_t getNumVertices() const { return _vertices.size(); }
 	const std::vector<triangle>& getTriangles() const { return _triangles; }
+        const vec3f& getVertex(size_t id) const { return _vertices[id]; }
 	const std::vector<vec3f>& getVertices() const { return _vertices; }
 	bool addFace(size_t v0, size_t v1, size_t v2) {
 		if (v0 > _vertices.size()

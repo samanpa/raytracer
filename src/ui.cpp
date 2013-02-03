@@ -68,6 +68,30 @@ static void glutResize (int w, int h)
 */
 }
 
+static void keyboardFunc(unsigned char k, int, int) {
+        switch(k) {
+        case 'q': ::exit(0); break;
+        }
+}
+
+static void specialFunc(int k, int, int)
+{
+        camera& camera = currui->getCamera();
+        switch (k) {
+        case GLUT_KEY_UP : camera.setAngle(camera.getAngle() * 5/6); break;
+        case GLUT_KEY_DOWN : camera.setAngle(camera.getAngle() * 6/5); break;
+/*
+        case GLUT_KEY_LEFT      : g_camSpace = AffineSpace3f::rotate(g_camSpace.p,g_camUp,-0.01f) * g_camSpace; break;
+        case GLUT_KEY_RIGHT     : g_camSpace = AffineSpace3f::rotate(g_camSpace.p,g_camUp,+0.01f) * g_camSpace; break;
+        case GLUT_KEY_UP        : g_camSpace = g_camSpace * AffineSpace3f::translate(Vec3f(0,0,g_speed)); break;
+        case GLUT_KEY_DOWN      : g_camSpace = g_camSpace * AffineSpace3f::translate(Vec3f(0,0,-g_speed)); break;
+        case GLUT_KEY_PAGE_UP   : g_speed *= 1.2f; std::cout << "speed = " << g_speed << std::endl; break;
+        case GLUT_KEY_PAGE_DOWN : g_speed /= 1.2f; std::cout << "speed = " << g_speed << std::endl; break;
+*/
+        }
+}
+
+
 void UI::draw() {
         if (!_usegl) {
                 drawScene();
@@ -84,9 +108,10 @@ void UI::draw() {
         glutInitWindowSize (_canvas.getWidth(), _canvas.getHeight());
         glutCreateWindow (PACKAGE_STRING);
 
-        //glutKeyboardFunc (doKeyboard);
-        glutDisplayFunc (glutDrawScene);
-        glutReshapeFunc (glutResize);
+        glutKeyboardFunc(keyboardFunc);
+        glutSpecialFunc(specialFunc);
+        glutDisplayFunc(glutDrawScene);
+        glutReshapeFunc(glutResize);
         glutIdleFunc(glutDrawScene);
 
         glutMainLoop();

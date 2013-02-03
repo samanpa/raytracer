@@ -21,7 +21,7 @@ public:
         void setUp(const vec3f& up) { _up = up; }
 
         float getAngle() const { return _angle; }
-        void setAngle(float angle) { _angle = angle; }
+        void setAngle(float angle) { if (angle < 180) _angle = angle; }
 private:
         vec3f _loc;
         vec3f _lookat;
