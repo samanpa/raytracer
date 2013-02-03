@@ -65,7 +65,6 @@ static void parseNormals(scene &scene) {
 		    << " num normals  " << numNormals;
 		throw parse_error(str.str());
 	}
-        INFO(numNormals << " normals ");
 	while (numNormals-- > 0) {
 		vec3f v = readVector();
 		scene.addNormal(v);

@@ -6,6 +6,7 @@
 #include <vector>
 #include "chunkmem.h"
 #include "aabb.h"
+#include <iomanip>
 
 enum class splittype : char{
         End,
@@ -18,9 +19,14 @@ struct splitevent {
         float pos;
         char axis;
         splittype type;
-        bool operator < (const splitevent& s) {
-                if (s.pos < pos) return true;
-                if (s.pos == pos) return (int)type < (int)s.type;
+        bool operator < (const splitevent& s) const {
+                if (pos < s.pos) return true;
+                if (pos == s.pos) {
+                        if (axis < s.axis) return true;
+                        if (axis > s.axis) return false;
+                        bool res = ((int)type < (int)s.type);
+                        return res;
+                }
                 return false;
         }
 
@@ -28,30 +34,35 @@ struct splitevent {
                 tri(tri), pos(pos), axis(axis), type(type) {}
 };
 
+enum class splitside : char {
+        Left, 
+        Right,
+        Both,
+        Undef
+};
+
+struct split {
+        aabb lv;
+        float pos;
+        aabb rv;
+        char axis;
+        splitside side;
+};
+
 class kdtreebuilder {
         kdtree& _kdtree;
         const scene& _scene;
-        std::vector<vec3f> _maxextend;
-        std::vector<vec3f> _minextend;
-        chunkmemmanager<splitevent> _leftprims;
-        chunkmemmanager<splitevent> _rightprims;
-        chunkmemmanager<splitevent> _bothprims;
+        chunkmemmanager<splitevent> _levmgr;
+        chunkmemmanager<splitevent> _revmgr;
+        chunkmemmanager<splitevent> _bevmgr;
+        std::vector<splitside> _sides;
         
-        static const int INTERSECT_COST = 50;
-        static const int TRAVERSAL_COST = 30;
-
-        bool findSplitPlane (aabb &voxel, chunkmem<splitevent>& tri, float &split, int &axis);
-	static void split(aabb& bb, int axis, float split, aabb& left, aabb&right);
-	void recbuild(nodeid node, chunkmem<splitevent>& triangles, aabb& voxel);
-        
-        static float sah(int nl, int nr, float pl, float pr)
-        {
-                float mult = 1.0f;
-                if ((nl == 0) | (nr == 0))
-                        mult = 0.8f;
-                return mult * (TRAVERSAL_COST + INTERSECT_COST * (pl * nl + pr * nr));
-        }
-
+        typedef chunkmem<splitevent> eventlist;
+        bool findPlane (const aabb &voxel, const eventlist& events, split &split, size_t numTris);
+	void recbuild(nodeid node, eventlist& triangles, aabb& voxel, size_t numTris);
+        void classify(eventlist& allevents, split &split
+                      , eventlist& left, eventlist& right
+                      , size_t &nl, size_t &nr);
 public:
         kdtreebuilder(kdtree& kdtree, const scene& scene);
         void build(vec3f& lower, vec3f& upper);              

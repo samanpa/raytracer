@@ -36,9 +36,10 @@ int main(int argc, char **argv, char **environ) {
                 }
         }
 
-        INFO("Done parsing");
+        INFO("Number of prims " << scene.getTriangles().size());
         camera.setAngle(15);
         camera.setLookAt(vec3f(0, 0.1, 0));
+        //camera.setLocation(vec3f(0, 0 ,-4));
 
         UI ui(scene, canvas, usegl);
         ui.draw();

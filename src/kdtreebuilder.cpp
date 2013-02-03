@@ -1,6 +1,8 @@
 #include "kdtreebuilder.h"
 #include "kdnode.h"
 #include "utils.h"
+#include <algorithm>
+#include <unordered_set>
 
 using namespace std;
 
@@ -8,109 +10,243 @@ kdtreebuilder::kdtreebuilder(kdtree& kdtree
                              , const scene& scene)
         : _kdtree(kdtree)
         , _scene(scene)
-        , _leftprims(scene.getTriangles().size() * 12)
-        , _rightprims(scene.getTriangles().size() * 12)
-        , _bothprims(scene.getTriangles().size() * 12)
+        , _levmgr(scene.getTriangles().size() * 12)
+        , _revmgr(scene.getTriangles().size() * 12)
+        , _bevmgr(scene.getTriangles().size() * 12)
 {
+        _sides.resize(scene.getTriangles().size());
 }
 
 void kdtreebuilder::build(vec3f &lower, vec3f &upper)
 {
-        auto prims = _bothprims.create();
-        int size   = _scene.getTriangles().size(); 
-        _minextend.resize(size);
-        _maxextend.resize(size);
+        auto bevents = _bevmgr.create();
+        size_t size  = _scene.getTriangles().size(); 
 
-        for (int i = 0; i < size; ++i) {
-                auto tri = _scene.getTriangles()[i];
-                tri.getBounds(_scene, _minextend[i], _maxextend[i]);
-                splitevent sp(i
-                              , _minextend[i].x()
-                              , X_Axis
-                              , splittype::Start);
-                prims.push_back(sp);
+        for (size_t i = 0; i < size; ++i) {
+                auto& tri = _scene.getTriangle(i);
+                vec3f min, max;
+                tri.getBounds(_scene, min, max);
+                for (int k = 0; k < 3; ++k) {
+                        if (min[k] == max[k]) {
+                                splitevent sp(i , min[k], k, splittype::Planar);
+                                bevents.push_back(sp);
+                        }
+                        else {
+                                splitevent sp1(i , min[k], k, splittype::Start);
+                                splitevent sp2(i , max[k], k, splittype::End);
+                                bevents.push_back(sp1);
+                                bevents.push_back(sp2);
+                        }
+                }
         }
         aabb bb;
         bb.lower = lower;
         bb.upper = upper;
-        recbuild(_kdtree.allocNode(), prims, bb);
+        std::sort(bevents.begin(), bevents.end());
+
+        recbuild(_kdtree.allocNode(), bevents, bb, size);
         INFO( "kdtree build complete " << size);
 }
 
-void kdtreebuilder::split(aabb& voxel, int axis, float split, 
-                          aabb& left, aabb &right)
+static void splitVoxel(const aabb& voxel, int axis, float split, aabb& left, aabb &right)
 {
-        right.upper = voxel.upper;
-        right.lower[axis] = split;
-        right.lower[modulo3[axis + 1]] = voxel.lower[modulo3[axis + 1]];
-        right.lower[modulo3[axis + 2]] = voxel.lower[modulo3[axis + 2]];
-
         left.lower = voxel.lower;
+        right.upper = voxel.upper;
         left.upper[axis] = split;
-        left.upper[modulo3[1 + axis]] = voxel.upper[modulo3[1 + axis]]; 
-        left.upper[modulo3[2 + axis]] = voxel.upper[modulo3[2 + axis]]; 
+        right.lower[axis] = split;
+        left.upper[modulo3[1 + axis]]  = voxel.upper[modulo3[1 + axis]]; 
+        right.lower[modulo3[axis + 1]] = voxel.lower[modulo3[axis + 1]];
+        left.upper[modulo3[2 + axis]]  = voxel.upper[modulo3[2 + axis]]; 
+        right.lower[modulo3[axis + 2]] = voxel.lower[modulo3[axis + 2]];
 }
 
-bool kdtreebuilder::findSplitPlane(aabb &v, chunkmem<splitevent>& events, float &split, int &axis) {
+static const int INTERSECT_COST = 50;
+static const int TRAVERSAL_COST = 30;
+
+static void sah(int nl, int nr, int np, float pl, float pr, float& cost, splitside &side)
+{
+        float lambda = ((nl == 0) | (nr == 0)) ? 0.8f : 1.0f;
+        float lcost = lambda * (TRAVERSAL_COST + INTERSECT_COST * (pl * (nl + np) + pr * nr));
+        float rcost = lambda * (TRAVERSAL_COST + INTERSECT_COST * (pl * nl + pr * (nr + np)));
+
+        if (lcost < rcost) {
+                cost = lcost;
+                side = splitside::Left;
+        }
+        else {
+                cost = rcost;
+                side = splitside::Right;
+        }
+}
+
+bool kdtreebuilder::findPlane(const aabb &v
+                              , const chunkmem<splitevent>& events, split &split, size_t numtris)
+{
         bool dosplit  = false;
-        float mincost = events.size() * INTERSECT_COST * 0.8;
+        float mincost = numtris * INTERSECT_COST;
         float rcparea = rcp(v.getArea());
-        for (int t = 0; t < 3; ++t) {
-                int cnt = min(events.size(), 2);
-                float diff = (v.upper[t] - v.lower[t]) / cnt;
-                for (int i = 1; i < cnt; ++i) {
-                        int nl = 0;
-                        int nr = 0;
-                        float pos = v.lower[t] + diff* i;
-                        for (auto& e : events) {
-                                if (_minextend[e.tri][t] <= pos) ++nl;
-                                if (_maxextend[e.tri][t] >= pos) ++nr;
-                        }
-                        aabb l, r;
-                        kdtreebuilder::split(v, t, pos, l, r);
-                        float cost = sah(nl, nr
-                                         , l.getArea()*rcparea, r.getArea()*rcparea);
-                        if (cost < mincost) {
-                                mincost = cost;
-                                split   = pos;
-                                axis    = t;
-                                dosplit = true;
-                        }
+        vec3<size_t> nleft(0, 0, 0);
+        vec3<size_t> nright(numtris, numtris, numtris);
+
+        auto end = events.end();
+        auto curr = events.begin();
+        while (curr < end) {
+                int k = curr->axis;
+                float split_k = curr->pos;
+                int np = 0, nend = 0, nstart = 0;
+
+                while (curr < end && curr->pos == split_k 
+                       && curr->axis == k && curr->type == splittype::End) {
+                        ++curr; ++nend;
+                }               
+                while (curr < end && curr->pos == split_k
+                       && curr->axis == k && curr->type == splittype::Planar) {
+                        ++curr; ++np;
+                }
+                while (curr < end && curr->pos == split_k
+                       && curr->axis == k && curr->type == splittype::Start) {
+                        ++curr; ++nstart;
+                }
+              
+                aabb lv, rv;
+                splitVoxel(v, k, split_k, lv, rv);
+
+                nright[k] -= (np + nend);
+                float cost;
+                splitside side;
+                sah(nleft[k], nright[k],  np, v.getArea()*rcparea, rv.getArea()*rcparea, cost, side);
+                nleft[k] += (nstart + np);
+
+                if (cost < mincost 
+                    && v.lower[k] < split_k
+                    && v.upper[k] > split_k) {
+                        split.pos  = split_k;
+                        split.side = side;
+                        split.lv   = lv;
+                        split.rv   = rv;
+                        split.axis = k;
+
+                        mincost = cost;
+                        dosplit = true;
                 }
         }
-
         return dosplit;
 }
 
-void kdtreebuilder::recbuild(nodeid node, chunkmem<splitevent>& events, aabb& voxel)
+void kdtreebuilder::classify(eventlist& allevents, split &split
+                             , eventlist& left, eventlist& right
+                             , size_t& nl, size_t& nr) 
 {
-        int axis;
-        float splitf;
-        bool isSplit = findSplitPlane(voxel, events, splitf, axis);
+        nl = nr = 0;
+        for (auto& e : allevents) 
+                _sides[e.tri] = splitside::Both;
+
+        for (auto& e : allevents) {
+                if (e.axis != split.axis) continue;
+                switch (e.type) {
+                case splittype::End:
+                        if (e.pos <= split.pos)
+                                _sides[e.tri] = splitside::Left;
+                        break;
+                case splittype::Start:
+                        if (e.pos >= split.pos)
+                                _sides[e.tri] = splitside::Right;
+                        break;
+                default:
+                        if (e.pos == split.pos)
+                                _sides[e.tri] = split.side;
+                        else if (e.pos < split.pos)
+                                _sides[e.tri] = splitside::Left;
+                        else if (e.pos > split.pos)
+                                _sides[e.tri] = splitside::Right;
+                        break;
+                }
+        }
+
+        auto both = _bevmgr.create();
+        for (auto& e : allevents) {
+                switch(_sides[e.tri]) {
+                case splitside::Left:  left.push_back(e); break;
+                case splitside::Right: right.push_back(e); break;
+                case splitside::Both:  both.push_back(e);  break;
+                default: break;
+                }
+        }
+
+        for (auto& e : allevents) {
+                switch(_sides[e.tri]) {
+                case splitside::Left:  ++nl; break;
+                case splitside::Right: ++nr; break;
+                case splitside::Both:  ++nl; ++nr; break;
+                default: break;
+                }
+                _sides[e.tri] = splitside::Undef;
+        }
+
+        auto onlyleftsize = left.size();
+        auto onlyrightsize = right.size();
+
+        for (auto& e : both) {
+                if (e.axis != split.axis)
+                        left.push_back(e);
+                else if (e.type == splittype::Planar) {
+                        INFO("messed up " << e.pos);
+                        abort();
+                }
+                else if (e.type == splittype::Start) {
+                        splitevent se(e.tri, split.pos, split.axis, splittype::End);
+                        left.push_back(e);
+                        left.push_back(se);
+                }
+        }
+        sort(left.begin() + onlyleftsize, left.end());
+
+        for (auto& e : both) {
+                if (e.axis != split.axis)
+                        right.push_back(e);
+                else if (e.type == splittype::Planar) {
+                        INFO("messed up " << e.pos);
+                        abort();
+                }
+                else if (e.type == splittype::End) {
+                        splitevent se(e.tri, split.pos, split.axis, splittype::Start);
+                        right.push_back(se);
+                        right.push_back(e);
+                }
+        }
+        sort(right.begin() + onlyrightsize, right.end());
+
+        inplace_merge(left.begin(), left.begin() + onlyleftsize, left.end());
+        inplace_merge(right.begin(), right.begin() + onlyrightsize, right.end());
+
+        both.destroy();
+}
+
+void kdtreebuilder::recbuild(nodeid node, chunkmem<splitevent>& events, aabb& voxel, size_t numtris)
+{
+        split split;
+        bool isSplit = findPlane(voxel, events, split, numtris);
         if (isSplit) {
-                aabb lv, rv;
                 auto left   = _kdtree.allocNode();
                 auto right  = _kdtree.allocNode();
                 
-                _kdtree.initInternalNode(node, left, axis, splitf);
-                split(voxel, axis, splitf, lv, rv);
-                
-                auto ltris = _leftprims.create();
-                auto rtris = _rightprims.create();
-                
-                for (auto& e : events) {
-                        if (_minextend[e.tri][axis] <= splitf)
-                                ltris.push_back(e);
-                        if (_maxextend[e.tri][axis] >= splitf)
-                                rtris.push_back(e);
-                }
-                recbuild(left,  ltris, lv);
-                recbuild(right, rtris, rv);
+                _kdtree.initInternalNode(node, left, split.axis, split.pos);
+               
+                auto levents = _levmgr.create();
+                auto revents = _revmgr.create();
+                size_t nl, nr;
+                classify(events, split, levents, revents, nl, nr);
+
+                recbuild(left,  levents, split.lv, nl);
+                recbuild(right, revents, split.rv, nr);
         }
         else {
-                _kdtree.initLeaf(node, events.size());
+                unordered_set<int> tris;
                 for (auto& e : events)
-                        _kdtree.addPrim(e.tri);
+                        tris.insert(e.tri);
+                _kdtree.initLeaf(node, tris.size());
+                for (auto& tri : tris)
+                        _kdtree.addPrim(tri);
         }
         events.destroy();
 }
