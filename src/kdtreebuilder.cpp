@@ -66,6 +66,7 @@ static const int TRAVERSAL_COST = 30;
 static void sah(int nl, int nr, int np, float pl, float pr, float& cost, splitside &side)
 {
         float lambda = ((nl == 0) | (nr == 0)) ? 0.8f : 1.0f;
+        
         float lcost = lambda * (TRAVERSAL_COST + INTERSECT_COST * (pl * (nl + np) + pr * nr));
         float rcost = lambda * (TRAVERSAL_COST + INTERSECT_COST * (pl * nl + pr * (nr + np)));
 
@@ -112,9 +113,9 @@ bool kdtreebuilder::findPlane(const aabb &v
                 splitVoxel(v, k, split_k, lv, rv);
 
                 nright[k] -= (np + nend);
-                float cost;
+                float cost = mincost;
                 splitside side;
-                sah(nleft[k], nright[k],  np, v.getArea()*rcparea, rv.getArea()*rcparea, cost, side);
+                sah(nleft[k], nright[k], np, lv.getArea()*rcparea, rv.getArea()*rcparea, cost, side);
                 nleft[k] += (nstart + np);
 
                 if (cost < mincost 
@@ -187,33 +188,20 @@ void kdtreebuilder::classify(eventlist& allevents, split &split
         auto onlyrightsize = right.size();
 
         for (auto& e : both) {
-                if (e.axis != split.axis)
-                        left.push_back(e);
-                else if (e.type == splittype::Planar) {
-                        INFO("messed up " << e.pos);
-                        abort();
-                }
-                else if (e.type == splittype::Start) {
-                        splitevent se(e.tri, split.pos, split.axis, splittype::End);
-                        left.push_back(e);
-                        left.push_back(se);
+                left.push_back(e);
+                right.push_back(e);
+                if (e.axis == split.axis) {
+                        if (e.type == splittype::Start) {
+                                splitevent se(e.tri, split.pos, split.axis, splittype::End);
+                                left.push_back(se);
+                        }
+                        else if (e.type == splittype::End) {
+                                splitevent se(e.tri, split.pos, split.axis, splittype::Start);
+                                right.push_back(se);
+                        }
                 }
         }
         sort(left.begin() + onlyleftsize, left.end());
-
-        for (auto& e : both) {
-                if (e.axis != split.axis)
-                        right.push_back(e);
-                else if (e.type == splittype::Planar) {
-                        INFO("messed up " << e.pos);
-                        abort();
-                }
-                else if (e.type == splittype::End) {
-                        splitevent se(e.tri, split.pos, split.axis, splittype::Start);
-                        right.push_back(se);
-                        right.push_back(e);
-                }
-        }
         sort(right.begin() + onlyrightsize, right.end());
 
         inplace_merge(left.begin(), left.begin() + onlyleftsize, left.end());
