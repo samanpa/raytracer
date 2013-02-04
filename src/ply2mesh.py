@@ -29,9 +29,12 @@ class Vertex (object):
     
     def normalize (self):
         mag = self.mag ()
-        self.x = self.x/mag
-        self.y = self.y/mag
-        self.z = self.z/mag
+        if mag == 0.0:
+            print (self)
+        else :
+            self.x = self.x/mag
+            self.y = self.y/mag
+            self.z = self.z/mag
 
     def __repr__(self):
         return "<%f, %f, %f>" % (self.x, self.y, self.z)
