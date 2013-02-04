@@ -80,12 +80,20 @@ static void sah(int nl, int nr, int np, float pl, float pr, float& cost, splitsi
         }
 }
 
+static float getArea(const aabb & v) 
+{
+        vec3f d(v.upper - v.lower);
+        //We don't multiply by 2 because we end up dividing 
+        //   by another area and cancelling it out
+        return (d.y() *(d.x() + d.z()) + d.z() * d.x());
+}
+
 bool kdtreebuilder::findPlane(const aabb &v
                               , const chunkmem<splitevent>& events, split &split, size_t numtris)
 {
         bool dosplit  = false;
         float mincost = numtris * INTERSECT_COST;
-        float rcparea = rcp(v.getArea());
+        float rcparea = rcp(getArea(v));
         vec3<size_t> nleft(0, 0, 0);
         vec3<size_t> nright(numtris, numtris, numtris);
 
@@ -115,7 +123,7 @@ bool kdtreebuilder::findPlane(const aabb &v
                 nright[k] -= (np + nend);
                 float cost = mincost;
                 splitside side;
-                sah(nleft[k], nright[k], np, lv.getArea()*rcparea, rv.getArea()*rcparea, cost, side);
+                sah(nleft[k], nright[k], np, getArea(lv)*rcparea, getArea(rv)*rcparea, cost, side);
                 nleft[k] += (nstart + np);
 
                 if (cost < mincost 
