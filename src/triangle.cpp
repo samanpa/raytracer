@@ -6,23 +6,23 @@
 using namespace std;
 
 
-void triangle::getBounds(const scene& scene, vec3f &min, vec3f &max) const {
+void triangle::getBounds(const scene& scene, aabb& bb) const {
         const auto &v0 = scene.getVertex(p0);
         const auto &v1 = scene.getVertex(p1);
         const auto &v2 = scene.getVertex(p2);
 
-	max.x() = std::max(v0.x(), v1.x());
-	max.x() = std::max(max.x(), v2.x());
-	max.y() = std::max(v0.y(), v1.y());
-	max.y() = std::max(max.y(), v2.y());
-	max.z() = std::max(v0.z(), v1.z());
-	max.z() = std::max(max.z(), v2.z());
-	min.x() = std::min(v0.x(), v1.x());
-	min.x() = std::min(min.x(), v2.x());
-	min.y() = std::min(v0.y(), v1.y());
-	min.y() = std::min(min.y(), v2.y());
-	min.z() = std::min(v0.z(), v1.z());
-	min.z() = std::min(min.z(), v2.z());
+	bb.upper.x() = std::max(v0.x(), v1.x());
+	bb.upper.x() = std::max(bb.upper.x(), v2.x());
+	bb.upper.y() = std::max(v0.y(), v1.y());
+	bb.upper.y() = std::max(bb.upper.y(), v2.y());
+	bb.upper.z() = std::max(v0.z(), v1.z());
+	bb.upper.z() = std::max(bb.upper.z(), v2.z());
+	bb.lower.x() = std::min(v0.x(), v1.x());
+	bb.lower.x() = std::min(bb.lower.x(), v2.x());
+	bb.lower.y() = std::min(v0.y(), v1.y());
+	bb.lower.y() = std::min(bb.lower.y(), v2.y());
+	bb.lower.z() = std::min(v0.z(), v1.z());
+	bb.lower.z() = std::min(bb.lower.z(), v2.z());
 }
 
 ssef triangle::getSmoothNormal(const scene& scene, float u, float v) const {
@@ -39,14 +39,3 @@ ssef triangle::getSmoothNormal(const scene& scene, float u, float v) const {
 #endif
         return nn;
 }
-
-void triangle::clip(const scene &scene, aabb& left, aabb& right, float splitf, int axis) const {
-        const auto &v0 = scene.getVertex(p0);
-        const auto &v1 = scene.getVertex(p1);
-        const auto &v2 = scene.getVertex(p2);
-        
-        ssef split(splitf);
-        ssef v(v0[axis], v1[axis], v2[axis], 0);
-        
-}
-

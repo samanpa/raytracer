@@ -12,32 +12,37 @@ kdtreebuilder::kdtreebuilder(kdtree& kdtree
         , _scene(scene)
         , _levmgr(scene.getTriangles().size() * 12)
         , _revmgr(scene.getTriangles().size() * 12)
-        , _bevmgr(scene.getTriangles().size() * 12)
+        , _bevmgr(scene.getTriangles().size() * 6)
 {
         _sides.resize(scene.getTriangles().size());
 }
+
+static void generateEvents(const aabb& bb, int tid, chunkmem<splitevent>& events) {
+        for (int k = 0; k < 3; ++k) {
+                if (bb.lower[k] == bb.upper[k]) {
+                        splitevent sp(tid , bb.lower[k], k, splittype::Planar);
+                        events.push_back(sp);
+                }
+                else {
+                        splitevent sp1(tid , bb.lower[k], k, splittype::Start);
+                        splitevent sp2(tid , bb.upper[k], k, splittype::End);
+                        events.push_back(sp1);
+                        events.push_back(sp2);
+                }
+        }
+}
+
 
 void kdtreebuilder::build(vec3f &lower, vec3f &upper)
 {
         auto bevents = _bevmgr.create();
         size_t size  = _scene.getTriangles().size(); 
 
-        for (size_t i = 0; i < size; ++i) {
-                auto& tri = _scene.getTriangle(i);
-                vec3f min, max;
-                tri.getBounds(_scene, min, max);
-                for (int k = 0; k < 3; ++k) {
-                        if (min[k] == max[k]) {
-                                splitevent sp(i , min[k], k, splittype::Planar);
-                                bevents.push_back(sp);
-                        }
-                        else {
-                                splitevent sp1(i , min[k], k, splittype::Start);
-                                splitevent sp2(i , max[k], k, splittype::End);
-                                bevents.push_back(sp1);
-                                bevents.push_back(sp2);
-                        }
-                }
+        for (size_t tid = 0; tid < size; ++tid) {
+                auto& tri = _scene.getTriangle(tid);
+                aabb bb;
+                tri.getBounds(_scene, bb);
+                generateEvents(bb, tid, bevents);
         }
         aabb bb;
         bb.lower = lower;
@@ -144,7 +149,7 @@ bool kdtreebuilder::findPlane(const aabb &v
 
 void kdtreebuilder::classify(eventlist& allevents, split &split
                              , eventlist& left, eventlist& right
-                             , size_t& nl, size_t& nr) 
+                             , size_t& nl, size_t& nr, const aabb& voxel) 
 {
         nl = nr = 0;
         for (auto& e : allevents) 
@@ -172,57 +177,47 @@ void kdtreebuilder::classify(eventlist& allevents, split &split
                 }
         }
 
-        auto both = _bevmgr.create();
         for (auto& e : allevents) {
                 switch(_sides[e.tri]) {
-                case splitside::Left:  left.push_back(e); break;
+                case splitside::Left:  left.push_back(e);  break;
                 case splitside::Right: right.push_back(e); break;
-                case splitside::Both:  both.push_back(e);  break;
                 default: break;
                 }
-        }
-
-        for (auto& e : allevents) {
-                switch(_sides[e.tri]) {
-                case splitside::Left:  ++nl; break;
-                case splitside::Right: ++nr; break;
-                case splitside::Both:  ++nl; ++nr; break;
-                default: break;
-                }
-                _sides[e.tri] = splitside::Undef;
         }
 
         auto onlyleftsize = left.size();
         auto onlyrightsize = right.size();
 
-        for (auto& e : both) {
-                left.push_back(e);
-                right.push_back(e);
-                if (e.axis == split.axis) {
-                        if (e.type == splittype::Start) {
-                                splitevent se(e.tri, split.pos, split.axis, splittype::End);
-                                left.push_back(se);
-                        }
-                        else if (e.type == splittype::End) {
-                                splitevent se(e.tri, split.pos, split.axis, splittype::Start);
-                                right.push_back(se);
-                        }
+        for (auto& e : allevents) {
+                switch(_sides[e.tri]) {
+                case splitside::Left:  ++nl; break;
+                case splitside::Right: ++nr; break;
+                case splitside::Both: {
+                        ++nl;
+                        ++nr;
+                        aabb l, r;
+                        clip(_scene, e.tri, voxel, l, r, split.pos, split.axis);
+                        generateEvents(l, e.tri, left);
+                        generateEvents(r, e.tri, right);
+                        break;
                 }
+                default: break;
+                }
+                _sides[e.tri] = splitside::Undef;
         }
+
         sort(left.begin() + onlyleftsize, left.end());
         sort(right.begin() + onlyrightsize, right.end());
 
         inplace_merge(left.begin(), left.begin() + onlyleftsize, left.end());
         inplace_merge(right.begin(), right.begin() + onlyrightsize, right.end());
-
-        both.destroy();
 }
 
 void kdtreebuilder::recbuild(nodeid node, chunkmem<splitevent>& events, aabb& voxel, size_t numtris)
 {
         split split;
-        bool isSplit = findPlane(voxel, events, split, numtris);
-        if (isSplit) {
+        bool hasSplit = findPlane(voxel, events, split, numtris);
+        if (hasSplit) {
                 auto left   = _kdtree.allocNode();
                 auto right  = _kdtree.allocNode();
                 
@@ -231,7 +226,7 @@ void kdtreebuilder::recbuild(nodeid node, chunkmem<splitevent>& events, aabb& vo
                 auto levents = _levmgr.create();
                 auto revents = _revmgr.create();
                 size_t nl, nr;
-                classify(events, split, levents, revents, nl, nr);
+                classify(events, split, levents, revents, nl, nr, voxel);
 
                 recbuild(left,  levents, split.lv, nl);
                 recbuild(right, revents, split.rv, nr);

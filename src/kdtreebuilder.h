@@ -62,7 +62,7 @@ class kdtreebuilder {
 	void recbuild(nodeid node, eventlist& triangles, aabb& voxel, size_t numTris);
         void classify(eventlist& allevents, split &split
                       , eventlist& left, eventlist& right
-                      , size_t &nl, size_t &nr);
+                      , size_t &nl, size_t &nr, const aabb& voxel);
 public:
         kdtreebuilder(kdtree& kdtree, const scene& scene);
         void build(vec3f& lower, vec3f& upper);              

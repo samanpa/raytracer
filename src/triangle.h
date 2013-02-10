@@ -12,12 +12,15 @@ public:
 		: p0(p0), p1(p1), p2(p2)
 		{}
 	
-        void getBounds(const scene& scene, vec3f &min, vec3f &max) const;
+        void getBounds(const scene& scene, aabb &bb) const;
         ssef getSmoothNormal(const scene& scene, float v, float w) const;
-        void clip(const scene& scene, aabb& left, aabb& right, float split, int axis) const;
+
 	const int p0;
 	const int p1;
 	const int p2;
 };
+
+void clip(const scene &scene, int tid
+          , const aabb& voxel, aabb& leftv, aabb &rightv, float splitf, int axis);
 
 #endif

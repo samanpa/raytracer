@@ -3,5 +3,6 @@
 
 #include "simd/ssef.h"
 #include "simd/ssei.h"
+#include "simd/ssed.h"
 
 #endif
