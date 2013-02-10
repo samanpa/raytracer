@@ -12,6 +12,7 @@ struct kdnode;
 class kdtree {
 public:
 	kdtree(scene& scene);
+
 	void draw(scene& scene, ray& ray, hit& hit);
 	void draw(scene& scene, ray4& ray, hit4& hit);
 	
@@ -24,11 +25,18 @@ public:
 	void addPrim(int prim) { _prims.push_back(prim); }
 
 private:
+        //Maximum number of items we can store on the stack is the depth of the tree
+        //    and a tree of depth 64 should be plenty deep
+        static const int MAX_STACK_SIZE = 64;
 	box _boundingBox;
 	kdnode *_nodes;
 	std::vector<int> _prims;
 	nodeid _numNodes;
 	nodeid _maxNodes;
+};
+
+enum class TraversalType {
+        Wachter
 };
 
 #endif
