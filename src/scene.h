@@ -19,6 +19,7 @@ struct scene {
 	statistic _rayCount;
 
 	camera& getCamera() { return _camera; }
+	const camera& getCamera() const { return _camera; }
         template <class T>
 	void draw(T& accel, canvas& canvas);
         template <class T>
