@@ -15,8 +15,8 @@ struct triangle_barycentric {
 	float e0v;
 	float e1u;  //projected e1 (v1 - v2);
 	float e1v;
-	int   pad1;
-	int   pad2; //pad to 12 words   
+	unsigned pad1;
+	unsigned pad2; //pad to 12 words   
 
 	void intersect(unsigned int primId, ray& ray, hit& hit);
 	void intersect(unsigned int primId, ray4& ray, hit4& hit);

@@ -10,6 +10,10 @@
 
 using namespace std;
 
+#define MBOX 3
+#include "mailbox.h"
+mailbox<128> mbox;
+
 void kdtreebenthin::draw(scene& scene, ray4& r4, hit4& hit4)
 {
         hit hit[4];
@@ -63,11 +67,11 @@ void kdtreebenthin::draw(scene& scene, ray4& r4, hit4& hit4)
         while (true) {        
                 if (!currNode->isLeaf()) {
                         int axis   = currNode->getAxis();
+                        int back   = currNode->getLeft() + ray_dir[axis][1];
+                        int front  = currNode->getLeft() + ray_dir[axis][0];
                         float dist = currNode->getSplit() - r4.O()[axis];
                         ssef dist4(dist);
                         ssef t     = dist4 * r4.rcpD()[axis];
-                        int back   = currNode->getLeft() + ray_dir[axis][1];
-                        int front  = currNode->getLeft() + ray_dir[axis][0];
 
                         currNode   = _nodes + back;
                         if (!(_mm_movemask_ps(tentry <= t) & activemask)) continue;
@@ -91,9 +95,9 @@ void kdtreebenthin::draw(scene& scene, ray4& r4, hit4& hit4)
                                 int t2 = _prims[primidx + i + 1];
                                 _mm_prefetch((char*)&scene._accels[t2], _MM_HINT_T0);
                                 //mailboxing
-                                if (scene._accels[t].pad1 == rayid) continue;
+                                if (mbox.find(scene, rayid, t)) continue;
                                 scene._accels[t].intersect(t, r4, hit4);
-                                scene._accels[t].pad1 = rayid;
+                                mbox.add(scene, rayid, t);
                         }
 
                         if (_mm_movemask_ps(texit < r4.tfar) == 0) return;
