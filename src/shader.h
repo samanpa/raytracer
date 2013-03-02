@@ -12,9 +12,10 @@ public:
                    , hit& hit);
 
 	void shade(scene &scene
-                   , ray4 &ray
-                   , color color[4]
-                   , hit4& hit);
+                   , ray4 *ray
+                   , color *color
+                   , hit4 *hit
+                   , unsigned int n);
 };
 
 #endif

@@ -22,20 +22,23 @@ void shader::shade(scene& scene
 }
 
 void shader::shade(scene &scene
-                   , ray4 &r4
-                   , color color[4]
-                   , hit4& hit4)
+                   , ray4  *r4
+                   , color *color
+                   , hit4  *hit4
+                   , unsigned int n)
 {
-	for (int x = 0; x < 4; ++x) {
-                vec3f d(r4.D().x()[x], r4.D().y()[x], r4.D().z()[x]);
-                ray ray(r4.O(), d);
-                hit h;
-
-		h.v    = hit4.v[x];
-		h.u    = hit4.u[x];
-		h.prim = hit4.prim[x];
-               
-                shade(scene, ray, color[x], h);
-	}
+        for (int i = 0; i < n; ++i) {
+                for (int j = 0; j < 4; ++j) {
+                        vec3f d(r4[i].D().x()[j], r4[i].D().y()[j], r4[i].D().z()[j]);
+                        ray ray(r4[i].O(), d);
+                        hit h;
+                        
+                        h.v    = hit4[i].v[j];
+                        h.u    = hit4[i].u[j];
+                        h.prim = hit4[i].prim[j];
+                        
+                        shade(scene, ray, color[i*4 +j], h);
+                }
+        }
 }
 

@@ -14,7 +14,6 @@ public:
 	kdtree(scene& scene);
 
 	void draw(scene& scene, ray& ray, hit& hit);
-	void draw(scene& scene, ray4& ray, hit4& hit);
 	
 	nodeid allocNode();
 	void initLeaf(nodeid id, int numPrims);
@@ -24,7 +23,7 @@ public:
 	size_t getCurrPrimId() const { return _prims.size(); }
 	void addPrim(int prim) { _prims.push_back(prim); }
 
-private:
+protected:
         //Maximum number of items we can store on the stack is the depth of the tree
         //    and a tree of depth 64 should be plenty deep
         static const int MAX_STACK_SIZE = 64;
@@ -35,8 +34,16 @@ private:
 	nodeid _maxNodes;
 };
 
-enum class TraversalType {
-        Wachter
+struct kdtreewachter : public kdtree {
+	kdtreewachter(scene& scene) : kdtree(scene) {}
+        using kdtree::draw;
+	void draw(scene& scene, ray4& ray, hit4& hit);
+};
+
+struct kdtreebenthin : public kdtree {
+	kdtreebenthin(scene& scene) : kdtree(scene) {}
+        using kdtree::draw;
+	void draw(scene& scene, ray4& ray, hit4& hit);
 };
 
 #endif

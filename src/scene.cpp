@@ -10,9 +10,9 @@
 
 using namespace std;
 
-static void getDownRight(scene &scene, canvas &canvas,
+static void getDownRight(const scene &scene, const canvas &canvas,
 			 vec3f& down, vec3f& right, vec3f& lefttop) {
-	auto& cam = scene.getCamera();
+	const auto& cam = scene.getCamera();
 	vec3f up(cam.getUp());
 	vec3f dir  = cam.getLookAt() - cam.getLocation();
 
@@ -62,10 +62,11 @@ void scene::draw(T& accel, canvas& canvas)
 template <typename T>
 void scene::draw4(T& accel, canvas& canvas)
 {
+        const int N = 1;
 	vec3f downf, rightf, lefttopf;
 	getDownRight(*this, canvas, downf, rightf, lefttopf);
         shader shader;
-        color colors[4];
+        color colors[4 * N];
 
 	vec3<ssef> lefttop = makeSimdVec(lefttopf
 					 , lefttopf + rightf
@@ -86,7 +87,7 @@ void scene::draw4(T& accel, canvas& canvas)
 			ray4 ray (_camera.getLocation(), dir);
 			hit4 h;
 			accel.draw(*this, ray, h);
-			shader.shade(*this, ray, colors, h);
+			shader.shade(*this, &ray, colors, &h, N);
                         canvas.get(i  , j  ) = colors[0];
                         canvas.get(i  , j+1) = colors[1];
                         canvas.get(i+1, j  ) = colors[2];
@@ -97,7 +98,11 @@ void scene::draw4(T& accel, canvas& canvas)
 	}
 }
 
-template void scene::draw<kdtree>(kdtree& accel, canvas& canvas);
-template void scene::draw4<kdtree>(kdtree& accel, canvas& canvas);
+template void scene::draw<kdtreewachter>(kdtreewachter& accel, canvas& canvas);
+template void scene::draw4<kdtreewachter>(kdtreewachter& accel, canvas& canvas);
+
+template void scene::draw<kdtreebenthin>(kdtreebenthin& accel, canvas& canvas);
+template void scene::draw4<kdtreebenthin>(kdtreebenthin& accel, canvas& canvas);
+
 template void scene::draw<noaccel>(noaccel& accel, canvas& canvas);
 template void scene::draw4<noaccel>(noaccel& accel, canvas& canvas);

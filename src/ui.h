@@ -9,7 +9,7 @@ class UI {
         scene& _scene;
         canvas& _canvas;
         bool _usegl;
-        kdtree _accel;
+        kdtreebenthin _accel;
 
 public:
         UI(scene& scene, canvas& canvas, bool usegl = true) 

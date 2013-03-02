@@ -1,3 +1,7 @@
+// Implementation of the kdtree traversal algorithm described in 
+//    Benthins phd thesis
+
+
 #include "kdtree.h"
 #include "float.h"
 #include "kdnode.h"
@@ -6,7 +10,8 @@
 
 using namespace std;
 
-void kdtree::draw2(scene& scene, ray4& r4, hit4& hit4) {
+void kdtreebenthin::draw(scene& scene, ray4& r4, hit4& hit4)
+{
         hit hit[4];
         unsigned int signx = _mm_movemask_ps(r4.D().x());
         unsigned int signy = _mm_movemask_ps(r4.D().y());
@@ -86,8 +91,7 @@ void kdtree::draw2(scene& scene, ray4& r4, hit4& hit4) {
                                 int t2 = _prims[primidx + i + 1];
                                 _mm_prefetch((char*)&scene._accels[t2], _MM_HINT_T0);
                                 //mailboxing
-                                if (scene._accels[t].pad1 == rayid)
-                                        continue;
+                                if (scene._accels[t].pad1 == rayid) continue;
                                 scene._accels[t].intersect(t, r4, hit4);
                                 scene._accels[t].pad1 = rayid;
                         }
