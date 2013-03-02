@@ -1,0 +1,7 @@
+#prefetching
+10cycle improvement in performance
+
+SCENE   : wachter,benthin 
+bunny   : 210,188
+dragon  : 377,322
+buddha  : 329,283
