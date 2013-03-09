@@ -94,6 +94,14 @@ __forceinline const ssef ifmask(const ssef &m, const ssef& a, const ssef& b) {
         return (m & a) | andnot(m, b);
 }
 
+__forceinline const ssef max(const ssef& a, const ssef& b) {
+        return _mm_max_ps(a, b);
+}
+
+__forceinline const ssef min(const ssef& a, const ssef& b) {
+        return _mm_min_ps(a, b);
+}
+
 //http://en.wikipedia.org/wiki/Division_%28digital%29#Newton.E2.80.93Raphson_division
 __forceinline ssef rcp(ssef n) {
 	ssef x0 = _mm_rcp_ps(n.m128);

@@ -37,7 +37,8 @@ protected:
 struct kdtreewachter : public kdtree {
 	kdtreewachter(scene& scene) : kdtree(scene) {}
         using kdtree::draw;
-	void draw(scene& scene, ray4& ray, hit4& hit);
+        template <int N>
+	void draw(scene& scene, ray4* ray, hit4* hit);
 };
 
 struct kdtreebenthin : public kdtree {

@@ -17,10 +17,11 @@ struct noaccel {
 	}
 
 
-	void draw(scene& scene, ray4& ray, hit4& hit) {
+        template <int N>
+	void draw(scene& scene, ray4* ray, hit4* hit) {
                 ticks start = getticks();
 		for (unsigned int p = 0; p < scene._accels.size(); ++p) {
-			scene._accels[p].intersect(p, ray, hit);
+			scene._accels[p].intersect(p, *ray, *hit);
 		}
                 ticks end = getticks();
                 scene._intersectCost.inc(end - start, scene._accels.size());

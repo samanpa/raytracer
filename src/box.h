@@ -12,5 +12,7 @@ public:
 	// Works only if ray in packet is travelling in the same direction
         //    tmin and tmax are unchanged if any ray in bundle misses box
         void intersect(ray4 &r, ssef& tmin, ssef& tmax);
+
+        void clip(ray4 &r, ssef& tmin, ssef& tmax);
 };
 #endif

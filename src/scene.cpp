@@ -105,11 +105,11 @@ void scene::draw4(T& accel, canvas& canvas)
 	}
 }
 
-//template void scene::draw<kdtreewachter>(kdtreewachter& accel, canvas& canvas);
-//template void scene::draw4<kdtreewachter>(kdtreewachter& accel, canvas& canvas);
+template void scene::draw<kdtreewachter>(kdtreewachter& accel, canvas& canvas);
+template void scene::draw4<kdtreewachter>(kdtreewachter& accel, canvas& canvas);
 
 template void scene::draw<kdtreebenthin>(kdtreebenthin& accel, canvas& canvas);
 template void scene::draw4<kdtreebenthin>(kdtreebenthin& accel, canvas& canvas);
 
-//template void scene::draw<noaccel>(noaccel& accel, canvas& canvas);
-//template void scene::draw4<noaccel>(noaccel& accel, canvas& canvas);
+template void scene::draw<noaccel>(noaccel& accel, canvas& canvas);
+template void scene::draw4<noaccel>(noaccel& accel, canvas& canvas);

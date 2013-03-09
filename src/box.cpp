@@ -73,3 +73,29 @@ void box::intersect(ray4 &r, ssef& tnear, ssef& tfar) {
         mask  = mask | (tmin < _mm_setzero_ps());
         tnear = ifmask(mask, tnear, tmin);
 }
+
+void box::clip(ray4 &r, ssef& tnear, ssef& tfar) {
+	ssef tymax, tymin, tzmax, tzmin, mask, mask2, tmin, tmax;
+
+	int signx = getSign(r.rcpD().x()[0]);
+	int signy = getSign(r.rcpD().y()[0]);
+	int signz = getSign(r.rcpD().z()[0]);
+
+	tmin  = ssef(bounds[    signx].x()) * r.rcpD().x();
+        tmax  = ssef(bounds[1 ^ signx].x()) * r.rcpD().x();
+
+	tymin = ssef(bounds[    signy].y()) * r.rcpD().y();
+	tymax = ssef(bounds[1 ^ signy].y()) * r.rcpD().y();
+
+        tzmin = ssef(bounds[    signz].z()) * r.rcpD().z();
+        tzmax = ssef(bounds[1 ^ signz].z()) * r.rcpD().z();
+
+        tmin  = max(tymin, tmin);
+        tmax  = min(tymax, tmax);
+
+        tmin  = max(tzmin, tmin);
+        tmax  = min(tzmax, tmax);
+
+        tnear = max(_mm_setzero_ps(), tmin);
+        tfar  = tmax;
+}

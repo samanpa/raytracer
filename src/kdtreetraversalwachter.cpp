@@ -8,11 +8,12 @@
 #include "kdnode.h"
 #include "utils.h"
 
-void kdtreewachter::draw(scene& scene, ray4& r4, hit4& hit4)
+template <>
+void kdtreewachter::draw<1>(scene& scene, ray4* r4, hit4* hit4)
 {
-        unsigned int signx = _mm_movemask_ps(r4.D().x());
-        unsigned int signy = _mm_movemask_ps(r4.D().y());
-        unsigned int signz = _mm_movemask_ps(r4.D().z());
+        unsigned int signx = movemask(r4->D().x());
+        unsigned int signy = movemask(r4->D().y());
+        unsigned int signz = movemask(r4->D().z());
 
         //If the traversal direction is not same for all rays we 
         //  do a single ray traversal
@@ -21,23 +22,23 @@ void kdtreewachter::draw(scene& scene, ray4& r4, hit4& hit4)
             || ((signz - 1) < 14)) { // sign of z is 0xF or 0
                 hit hit[4];
                 for (int i = 0; i < 4; ++i) {
-                        vec3f d(r4.D().x()[i], r4.D().y()[i], r4.D().z()[i]);
-                        ray ray(r4.O(), d);
+                        vec3f d(r4->D().x()[i], r4->D().y()[i], r4->D().z()[i]);
+                        ray ray(r4->O(), d);
                         hit[i].prim = -1;
                         draw(scene, ray, hit[i]);
                 }
-                hit4.prim = ssei(hit[0].prim, hit[1].prim, hit[2].prim, hit[3].prim);
-                hit4.u    = ssef(hit[0].u, hit[1].u, hit[2].u, hit[3].u);
-                hit4.v    = ssef(hit[0].v, hit[1].v, hit[2].v, hit[3].v);
+                hit4->prim = ssei(hit[0].prim, hit[1].prim, hit[2].prim, hit[3].prim);
+                hit4->u    = ssef(hit[0].u, hit[1].u, hit[2].u, hit[3].u);
+                hit4->v    = ssef(hit[0].v, hit[1].v, hit[2].v, hit[3].v);
                 return;
         }
 
         ssef tentry(_mm_setzero_ps());
         ssef texit(_mm_setzero_ps());
         //tentry and texit will be unchanged if ray misses the box
-        _boundingBox.intersect(r4, tentry, texit);
+        _boundingBox.clip(*r4, tentry, texit);
         
-        if (_mm_movemask_ps(tentry == texit) == 0xF)
+        if (movemask(tentry >= texit) == 0xF)
                 return;
 
         ssef far[MAX_STACK_SIZE];
@@ -55,11 +56,11 @@ void kdtreewachter::draw(scene& scene, ray4& r4, hit4& hit4)
         while (true) {
                 if (!currNode->isLeaf()) {
                         int axis  = currNode->getAxis();
-                        float dist = currNode->getSplit () - r4.O()[axis];
+                        float dist = currNode->getSplit () - r4->O()[axis];
                         ssef dist4(dist);
-                        ssef t = dist4 * r4.rcpD()[axis];
+                        ssef t = dist4 * r4->rcpD()[axis];
                         unsigned int test = 
-                                _mm_movemask_ps(dist4 <= (r4.D()[axis] * tentry));
+                                movemask(dist4 <= (r4->D()[axis] * tentry));
 
                         int left = currNode->getLeft();
                         // does the ray packet traverse both cells
@@ -75,7 +76,7 @@ void kdtreewachter::draw(scene& scene, ray4& r4, hit4& hit4)
                                 test  = test & 0x1;
                                 ssef cmp((t > tentry) & (t < texit));
 
-                                if (_mm_movemask_ps(cmp) != 0 ) {
+                                if (movemask(cmp) != 0 ) {
                                         far[stackptr] = texit;
                                         nodes[stackptr] = left + ( 1 ^ test);
                                         ++stackptr;
@@ -96,11 +97,11 @@ void kdtreewachter::draw(scene& scene, ray4& r4, hit4& hit4)
                                 //mailboxing
                                 if (scene._accels[t].pad1 == rayid)
                                         continue;
-                                scene._accels[t].intersect(t, r4, hit4);
+                                scene._accels[t].intersect(t, *r4, *hit4);
                                 scene._accels[t].pad1 = rayid;
                         }
 
-                        if (_mm_movemask_ps(texit < r4.tfar) == 0) return;
+                        if (movemask(texit < r4->tfar) == 0) return;
                                                 
                         --stackptr;
                         tentry   = _mm_max_ps(tentry, texit);
