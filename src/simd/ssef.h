@@ -28,6 +28,10 @@ struct ssef
 	}
 };
 
+__forceinline unsigned int movemask(const ssef &m) {
+        return _mm_movemask_ps(m.m128);
+}
+
 __forceinline const ssef operator*(const ssef& a, const ssef& b ) {
 	return _mm_mul_ps(a.m128, b.m128);
 }

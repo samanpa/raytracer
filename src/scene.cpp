@@ -59,6 +59,16 @@ void scene::draw(T& accel, canvas& canvas)
 	}
 }
 
+
+template <int N>
+inline void setColors(canvas& canvas, color* colors, unsigned i, unsigned j)
+{
+        int idx = 0;
+        for (unsigned h = 0; h < N; ++h)
+                for (unsigned w = 0; w < N; ++w)
+                        canvas.get(i + h, j + w) = colors[idx++];
+}
+
 template <typename T>
 void scene::draw4(T& accel, canvas& canvas)
 {
@@ -86,23 +96,20 @@ void scene::draw4(T& accel, canvas& canvas)
                         normalize(dir);
 			ray4 ray (_camera.getLocation(), dir);
 			hit4 h;
-			accel.draw(*this, ray, h);
+			accel.draw<N>(*this, &ray, &h);
 			shader.shade(*this, &ray, colors, &h, N);
-                        canvas.get(i  , j  ) = colors[0];
-                        canvas.get(i  , j+1) = colors[1];
-                        canvas.get(i+1, j  ) = colors[2];
-                        canvas.get(i+1, j+1) = colors[3];
+                        setColors<2>(canvas, colors, i, j);
 			pos += right;
 		}
 		leftedge += down;
 	}
 }
 
-template void scene::draw<kdtreewachter>(kdtreewachter& accel, canvas& canvas);
-template void scene::draw4<kdtreewachter>(kdtreewachter& accel, canvas& canvas);
+//template void scene::draw<kdtreewachter>(kdtreewachter& accel, canvas& canvas);
+//template void scene::draw4<kdtreewachter>(kdtreewachter& accel, canvas& canvas);
 
 template void scene::draw<kdtreebenthin>(kdtreebenthin& accel, canvas& canvas);
 template void scene::draw4<kdtreebenthin>(kdtreebenthin& accel, canvas& canvas);
 
-template void scene::draw<noaccel>(noaccel& accel, canvas& canvas);
-template void scene::draw4<noaccel>(noaccel& accel, canvas& canvas);
+//template void scene::draw<noaccel>(noaccel& accel, canvas& canvas);
+//template void scene::draw4<noaccel>(noaccel& accel, canvas& canvas);

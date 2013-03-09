@@ -43,7 +43,8 @@ struct kdtreewachter : public kdtree {
 struct kdtreebenthin : public kdtree {
 	kdtreebenthin(scene& scene) : kdtree(scene) {}
         using kdtree::draw;
-	void draw(scene& scene, ray4& ray, hit4& hit);
+        template <int N>
+	void draw(scene& scene, ray4* ray, hit4* hit);
 };
 
 #endif

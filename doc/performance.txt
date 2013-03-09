@@ -1,6 +1,9 @@
 #prefetching
 10cycle improvement in performance
 
+#storing mailbox info in the acceleration structure
+15-20 cycle improvement in performance
+
 SCENE   : wachter,benthin 
 bunny   : 210,188
 dragon  : 377,322

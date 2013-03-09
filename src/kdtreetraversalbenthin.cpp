@@ -14,36 +14,37 @@ using namespace std;
 #include "mailbox.h"
 mailbox<128> mbox;
 
-void kdtreebenthin::draw(scene& scene, ray4& r4, hit4& hit4)
+template <>
+void kdtreebenthin::draw<1>(scene& scene, ray4* r, hit4* hit4)
 {
-        hit hit[4];
-        unsigned int signx = _mm_movemask_ps(r4.D().x());
-        unsigned int signy = _mm_movemask_ps(r4.D().y());
-        unsigned int signz = _mm_movemask_ps(r4.D().z());
+        unsigned int signx = movemask(r->D().x());
+        unsigned int signy = movemask(r->D().y());
+        unsigned int signz = movemask(r->D().z());
 
         //If the traversal direction is not same for all rays we 
         //  do a single ray traversal
         if (((signx - 1) < 14)       // sign of x is 0xF or 0
             || ((signy - 1) < 14)    // sign of y is 0xF or 0
             || ((signz - 1) < 14)) { // sign of z is 0xF or 0
+                hit hit[4];
                 for (int i = 0; i < 4; ++i) {
-                        vec3f d(r4.D().x()[i], r4.D().y()[i], r4.D().z()[i]);
-                        ray ray(r4.O(), d);
+                        vec3f d(r->D().x()[i], r->D().y()[i], r->D().z()[i]);
+                        ray ray(r->O(), d);
                         hit[i].prim = -1;
                         draw(scene, ray, hit[i]);
                 }
-                hit4.prim = ssei(hit[0].prim, hit[1].prim, hit[2].prim, hit[3].prim);
-                hit4.u    = ssef(hit[0].u, hit[1].u, hit[2].u, hit[3].u);
-                hit4.v    = ssef(hit[0].v, hit[1].v, hit[2].v, hit[3].v);
+                hit4->prim = ssei(hit[0].prim, hit[1].prim, hit[2].prim, hit[3].prim);
+                hit4->u    = ssef(hit[0].u, hit[1].u, hit[2].u, hit[3].u);
+                hit4->v    = ssef(hit[0].v, hit[1].v, hit[2].v, hit[3].v);
                 return;
         }
 
         ssef tentry(_mm_setzero_ps());
         ssef texit(_mm_setzero_ps());
         //tentry and texit will be unchanged if ray misses the box
-        _boundingBox.intersect(r4, tentry, texit);
+        _boundingBox.intersect(*r, tentry, texit);
         
-        if (_mm_movemask_ps(tentry == texit) == 0xF)
+        if (movemask(tentry == texit) == 0xF)
                 return;
         const unsigned int ray_dir[3][2] = {
                 { signx & 1 , 1 - (signx & 1) },
@@ -69,20 +70,20 @@ void kdtreebenthin::draw(scene& scene, ray4& r4, hit4& hit4)
                         int axis   = currNode->getAxis();
                         int back   = currNode->getLeft() + ray_dir[axis][1];
                         int front  = currNode->getLeft() + ray_dir[axis][0];
-                        float dist = currNode->getSplit() - r4.O()[axis];
-                        ssef dist4(dist);
-                        ssef t     = dist4 * r4.rcpD()[axis];
+                        ssef dist  = currNode->getSplit() - r->O()[axis];
+                        ssef t     = dist * r->rcpD()[axis];
 
                         currNode   = _nodes + back;
-                        if (!(_mm_movemask_ps(tentry <= t) & activemask)) continue;
+                        if (!(movemask(tentry <= t) & activemask)) continue;
 
                         currNode   = _nodes + front;
-                        if (!(_mm_movemask_ps(texit >= t) & activemask))  continue;
+                        if (!(movemask(texit >= t) & activemask))  continue;
 
-                        far[stackptr]   = texit;
-                        near[stackptr]  = _mm_max_ps(tentry, t);
                         nodes[stackptr] = back;
+                        near[stackptr]  = _mm_max_ps(tentry, t);
+                        far[stackptr]   = texit;
                         texit           = _mm_min_ps(texit, t);
+                        activemask     &= _mm_movemask_ps(_mm_cmple_ps(tentry, texit));
                         ++stackptr;
                 } else {
                         int primidx   = currNode->getPrimitiveOffset();
@@ -96,19 +97,18 @@ void kdtreebenthin::draw(scene& scene, ray4& r4, hit4& hit4)
                                 _mm_prefetch((char*)&scene._accels[t2], _MM_HINT_T0);
                                 //mailboxing
                                 if (mbox.find(scene, rayid, t)) continue;
-                                scene._accels[t].intersect(t, r4, hit4);
+                                scene._accels[t].intersect(t, *r, *hit4);
                                 mbox.add(scene, rayid, t);
                         }
 
-                        if (_mm_movemask_ps(texit < r4.tfar) == 0) return;
+                        if (movemask(texit < r->tfar) == 0) return;
                         
                         --stackptr;
-                        tentry   = _mm_max_ps(tentry, texit);
-                        currNode = nodes[stackptr] + _nodes;
-                        texit    = far[stackptr];
-                        tentry   = near[stackptr];
+                        currNode   = nodes[stackptr] + _nodes;
+                        texit      = far[stackptr];
+                        tentry     = near[stackptr];
+                        activemask = movemask(tentry <= texit);
                 }
         }
-
-        exit(0);
 }
+
