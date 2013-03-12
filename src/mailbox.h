@@ -1,6 +1,8 @@
 #ifndef MAILBOX_H
 #define MAILBOX_H
 
+#define MBOX 3
+
 #if MBOX == 1
 struct mailboxentry { unsigned int ray; unsigned int tri;};
 
@@ -59,7 +61,7 @@ struct mailbox {
         }
 
         inline void add(scene& s, unsigned int ray, unsigned int tri) {
-                s._accels[tri].pad1 == ray;
+                s._accels[tri].pad1 = ray;
         }
 
         inline bool find(scene& s, unsigned int ray, unsigned int tri) {

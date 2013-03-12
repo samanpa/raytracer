@@ -8,6 +8,9 @@
 #include "kdnode.h"
 #include "utils.h"
 
+#include "mailbox.h"
+static mailbox<128> mbox;
+
 template <>
 void kdtreewachter::draw<1>(scene& scene, ray4* r4, hit4* hit4)
 {
@@ -33,8 +36,7 @@ void kdtreewachter::draw<1>(scene& scene, ray4* r4, hit4* hit4)
                 return;
         }
 
-        ssef tentry(_mm_setzero_ps());
-        ssef texit(_mm_setzero_ps());
+        ssef tentry, texit;
         //tentry and texit will be unchanged if ray misses the box
         _boundingBox.clip(*r4, tentry, texit);
         
@@ -95,10 +97,9 @@ void kdtreewachter::draw<1>(scene& scene, ray4* r4, hit4* hit4)
                                 int t2 = _prims[primidx + i + 1];
                                 _mm_prefetch((char*)&scene._accels[t2], _MM_HINT_T0);
                                 //mailboxing
-                                if (scene._accels[t].pad1 == rayid)
-                                        continue;
+                                if (mbox.find(scene, rayid, t)) continue;
                                 scene._accels[t].intersect(t, *r4, *hit4);
-                                scene._accels[t].pad1 = rayid;
+                                mbox.add(scene, rayid, t);
                         }
 
                         if (movemask(texit < r4->tfar) == 0) return;

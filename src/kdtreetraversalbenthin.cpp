@@ -7,12 +7,9 @@
 #include "kdnode.h"
 #include "kdnode.h"
 #include "utils.h"
-
-using namespace std;
-
-#define MBOX 3
 #include "mailbox.h"
-mailbox<128> mbox;
+
+static mailbox<128> mbox;
 
 template <>
 void kdtreebenthin::draw<1>(scene& scene, ray4* r, hit4* hit4)
@@ -39,14 +36,12 @@ void kdtreebenthin::draw<1>(scene& scene, ray4* r, hit4* hit4)
                 return;
         }
 
-        ssef tentry(_mm_setzero_ps());
-        ssef texit(_mm_setzero_ps());
-        //tentry and texit will be unchanged if ray misses the box
-        _boundingBox.intersect(*r, tentry, texit);
-        
-        if (movemask(tentry == texit) == 0xF)
+        ssef tnear, tfar;
+        _boundingBox.clip(*r, tnear, tfar);
+        if (movemask(tnear >= tfar) == 0xF)
                 return;
-        const unsigned int ray_dir[3][2] = {
+
+        const unsigned int dir[3][2] = {
                 { signx & 1 , 1 - (signx & 1) },
                 { signy & 1 , 1 - (signy & 1) },
                 { signz & 1 , 1 - (signz & 1) } };
@@ -65,25 +60,25 @@ void kdtreebenthin::draw<1>(scene& scene, ray4* r, hit4* hit4)
         int activemask = 0xF;
         static uint64_t rayid = 0;
         ++rayid;
-        while (true) {        
+        while (true) {
                 if (!currNode->isLeaf()) {
-                        int axis   = currNode->getAxis();
-                        int back   = currNode->getLeft() + ray_dir[axis][1];
-                        int front  = currNode->getLeft() + ray_dir[axis][0];
-                        ssef dist  = currNode->getSplit() - r->O()[axis];
-                        ssef t     = dist * r->rcpD()[axis];
+                        const int axis  = currNode->getAxis();
+                        const int front = currNode->getLeft() + dir[axis][0];
+                        const int back  = currNode->getLeft() + dir[axis][1];
+                        const ssef dist = currNode->getSplit() - r->O()[axis];
+                        const ssef t    = dist * r->rcpD()[axis];
 
                         currNode   = _nodes + back;
-                        if (!(movemask(tentry <= t) & activemask)) continue;
+                        if (!(movemask(tnear <= t) & activemask)) continue;
 
                         currNode   = _nodes + front;
-                        if (!(movemask(texit >= t) & activemask))  continue;
+                        if (!(movemask(tfar >= t) & activemask))  continue;
 
                         nodes[stackptr] = back;
-                        near[stackptr]  = _mm_max_ps(tentry, t);
-                        far[stackptr]   = texit;
-                        texit           = _mm_min_ps(texit, t);
-                        activemask     &= _mm_movemask_ps(_mm_cmple_ps(tentry, texit));
+                        near[stackptr]  = max(tnear, t);
+                        far[stackptr]   = tfar;
+                        tfar            = min(tfar, t);
+                        activemask     &= movemask(tnear <= tfar);
                         ++stackptr;
                 } else {
                         int primidx   = currNode->getPrimitiveOffset();
@@ -101,13 +96,13 @@ void kdtreebenthin::draw<1>(scene& scene, ray4* r, hit4* hit4)
                                 mbox.add(scene, rayid, t);
                         }
 
-                        if (movemask(texit < r->tfar) == 0) return;
+                        if (movemask(tfar < r->tfar) == 0) return;
                         
                         --stackptr;
                         currNode   = nodes[stackptr] + _nodes;
-                        texit      = far[stackptr];
-                        tentry     = near[stackptr];
-                        activemask = movemask(tentry <= texit);
+                        tfar       = far[stackptr];
+                        tnear      = near[stackptr];
+                        activemask = movemask(tnear <= tfar);
                 }
         }
 }
