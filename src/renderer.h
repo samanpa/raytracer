@@ -29,13 +29,14 @@ private:
         shader _shader;
 	statistic _intersectCost;
 	statistic _rayCount;
-        
+
         template <int SQRTN>
         void drawTile(canvas& canvas
                       , const vec3<ssef>& pos
                       , const vec3<ssef>& right
                       , const vec3<ssef>& down
                       , unsigned i, unsigned j);
+       
 };
 
 #include "renderer.inl.cpp"

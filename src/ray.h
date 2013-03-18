@@ -23,14 +23,20 @@ struct hit4 {
 template <typename T>
 class rayt {
 public:
+        rayt(){}
+
         //d must be normalized
-        rayt(const vec3f& o, const vec3<T>& d) :
-		tfar(BIG_FLOAT),
-		_orig(o),
-		_dir(d) {
+        rayt(const vec3f& o, const vec3<T>& d) {
+                init(o, d);
+	}
+        
+        void init(const vec3f& o, const vec3<T>& d)
+        {
+		tfar  = BIG_FLOAT;
+		_orig = o;
+		_dir  = d;
 		_invdir = rcp(_dir);
 	}
-
 	const vec3f& O() const { return _orig; }
 	const vec3<T>& D() const { return _dir; }
 	const vec3<T>& rcpD() const { return _invdir; }

@@ -12,7 +12,7 @@
 static mailbox<128> mbox;
 
 template <>
-void kdtreebenthin::draw<1>(scene& scene, ray4* r, hit4* hit4)
+void kdtreebenthin::drawBundle<1>(scene& scene, ray4* r, hit4* hit4)
 {
         unsigned int signx = movemask(r->D().x());
         unsigned int signy = movemask(r->D().y());
@@ -92,7 +92,7 @@ void kdtreebenthin::draw<1>(scene& scene, ray4* r, hit4* hit4)
                                 _mm_prefetch((char*)&scene._accels[t2], _MM_HINT_T0);
                                 //mailboxing
                                 if (mbox.find(scene, rayid, t)) continue;
-                                scene._accels[t].intersect(t, *r, *hit4);
+                                scene.intersect(t, *r, *hit4);
                                 mbox.add(scene, rayid, t);
                         }
 

@@ -5,14 +5,23 @@
 #include "utils.h"
 #include "cycle.h"
 #include "ui.h"
+#include "renderer.h"
 
 using namespace std;
+
+static renderer<kdtreebenthin> *arenderer;
+void drawit (canvas &canvas) {
+        ticks start = getticks();
+        arenderer->drawBundle<1>(canvas);
+        ticks end = getticks();
+        INFO( "Cycles per ray " << (end - start) / arenderer->getRayCount());
+}
+
 
 int main(int argc, char **argv, char **environ) {
         _MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
 
         scene scene;
-        canvas canvas(1024, 1024);
         camera& camera = scene.getCamera();
         bool usegl = true;
 
@@ -27,6 +36,7 @@ int main(int argc, char **argv, char **environ) {
                 else {
                         try {
                                 parsePov(argv[i], scene);
+                                arenderer = new renderer<kdtreebenthin>(scene);
                         }
                         catch (parse_error& pe) {
                                 cerr << "Could not parse " << argv[1]
@@ -40,6 +50,6 @@ int main(int argc, char **argv, char **environ) {
         camera.setAngle(15);
         camera.setLookAt(vec3f(0, 0.1, 0));
 
-        UI ui(scene, canvas, usegl);
+        UI ui(scene, 1024, 1024, drawit, usegl);
         ui.draw();
 }

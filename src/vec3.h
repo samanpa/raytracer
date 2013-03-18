@@ -17,7 +17,7 @@ template<class T>
 class vec3 {
 public:
 	__forceinline vec3() {}
-	__forceinline vec3(T x, T y, T z) {_v[0] = x; _v[1] = y; _v[2] = z; }
+	__forceinline vec3(const T& x, const T& y, const T& z) {_v[0] = x; _v[1] = y; _v[2] = z; }
 	__forceinline vec3(vec3&& v) {_v[0] = v[0]; _v[1] = v[1]; _v[2] = v[2];}
 	__forceinline vec3(const vec3& v) {_v[0] = v[0]; _v[1] = v[1]; _v[2] = v[2];}
 

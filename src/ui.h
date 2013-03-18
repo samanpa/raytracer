@@ -2,21 +2,22 @@
 #define BPRAY_UI_H
 
 #include <scene.h>
-#include "kdtree.h"
-#include "noaccel.h"
 
 class UI {
-        scene& _scene;
-        canvas& _canvas;
+        canvas _canvas;
         bool _usegl;
-        kdtreebenthin _accel;
+        void (*_renderer)(canvas&);
+        scene& _scene;
 
 public:
-        UI(scene& scene, canvas& canvas, bool usegl = true) 
-                : _scene(scene)
-                , _canvas(canvas)
+        UI(scene& scene
+           , int h, int w
+           , void (*renderer)(canvas &)
+           , bool usegl) 
+                : _canvas(h, w)
                 , _usegl(usegl)
-                , _accel(scene) {
+                , _renderer(renderer)
+                , _scene(scene) {
         }
 
         void draw();

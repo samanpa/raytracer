@@ -45,7 +45,7 @@ struct kdtreebenthin : public kdtree {
 	kdtreebenthin(scene& scene) : kdtree(scene) {}
         using kdtree::draw;
         template <int N>
-	void draw(scene& scene, ray4* ray, hit4* hit);
+	void drawBundle(scene& scene, ray4* ray, hit4* hit);
 };
 
 #endif

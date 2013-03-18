@@ -27,17 +27,18 @@ void shader::shade(scene &scene
                    , hit4  *hit4
                    , unsigned int n)
 {
-        for (int i = 0; i < n; ++i) {
-                for (int j = 0; j < 4; ++j) {
+        for (unsigned i = 0; i < n; ++i) {
+                for (unsigned j = 0; j < 4; ++j) {
                         vec3f d(r4[i].D().x()[j], r4[i].D().y()[j], r4[i].D().z()[j]);
                         ray ray(r4[i].O(), d);
+                        // INFO(hit4[i].prim);
                         hit h;
                         
                         h.v    = hit4[i].v[j];
                         h.u    = hit4[i].u[j];
                         h.prim = hit4[i].prim[j];
                         
-                        shade(scene, ray, color[i*4 +j], h);
+                        shade(scene, ray, color[i*4+j], h);
                 }
         }
 }

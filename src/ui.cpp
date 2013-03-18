@@ -8,10 +8,7 @@
 static UI* currui = NULL;
 
 void UI::drawScene() {
-        ticks start = getticks();
-        _scene.draw4(_accel, _canvas);
-        ticks end = getticks();
-        INFO( "Cycles per ray " << (end - start) / _scene._rayCount.val);
+        _renderer(_canvas);
 }
 
 void UI::renderCanvas() {

@@ -9,22 +9,22 @@ struct noaccel {
         
 	void draw(scene& scene, ray& ray, hit& hit) {
 		for (unsigned int p = 0; p < scene._accels.size(); ++p) {
-			ticks start = getticks();
-			scene._accels[p].intersect(p, ray, hit);
-			ticks end = getticks();
-			scene._intersectCost.inc(end - start);
+			//ticks start = getticks();
+			scene.intersect(p, ray, hit);
+			//ticks end = getticks();
+			//scene._intersectCost.inc(end - start);
 		}
 	}
 
 
         template <int N>
 	void draw(scene& scene, ray4* ray, hit4* hit) {
-                ticks start = getticks();
+                //ticks start = getticks();
 		for (unsigned int p = 0; p < scene._accels.size(); ++p) {
-			scene._accels[p].intersect(p, *ray, *hit);
+			scene.intersect(p, *ray, *hit);
 		}
-                ticks end = getticks();
-                scene._intersectCost.inc(end - start, scene._accels.size());
+                //ticks end = getticks();
+                //scene._intersectCost.inc(end - start, scene._accels.size());
 	}
 };
 

@@ -98,7 +98,7 @@ void kdtreewachter::draw<1>(scene& scene, ray4* r4, hit4* hit4)
                                 _mm_prefetch((char*)&scene._accels[t2], _MM_HINT_T0);
                                 //mailboxing
                                 if (mbox.find(scene, rayid, t)) continue;
-                                scene._accels[t].intersect(t, *r4, *hit4);
+                                scene.intersect(t, *r4, *hit4);
                                 mbox.add(scene, rayid, t);
                         }
 

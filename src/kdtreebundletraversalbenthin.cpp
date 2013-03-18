@@ -15,7 +15,7 @@ mailbox<128> mbox;
 
 
 template <>
-void kdtreebenthin::draw<N>(scene& scene, ray4* r, hit4* h)
+void kdtreebenthin::drawBundle<N>(scene& scene, ray4* r, hit4* h)
 {
         unsigned int signx = 0, signy = 0, signz = 0;
         
@@ -30,7 +30,7 @@ void kdtreebenthin::draw<N>(scene& scene, ray4* r, hit4* h)
         //  do a single ray traversal
         if (((signx-1) < MASK) || ((signy-1) < MASK) || ((signz-1) < MASK)) { 
                 for (int i = 0; i < N; ++i)
-                        draw<1>(scene, r+i, h+i);
+                        drawBundle<1>(scene, r+i, h+i);
                 return;
         }
 
@@ -113,7 +113,7 @@ void kdtreebenthin::draw<N>(scene& scene, ray4* r, hit4* h)
                                 //mailboxing
                                 if (mbox.find(scene, rayid, t)) continue;
                                 for (unsigned j = 0; j < N; ++j) {
-                                        scene._accels[t].intersect(t, r[j], h[j]);
+                                        scene.intersect(t, r[j], h[j]);
                                 }
                                 mbox.add(scene, rayid, t);
                         }

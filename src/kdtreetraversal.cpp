@@ -1,12 +1,14 @@
 // Implementation of the kdtree traversal algorithm described in 
 //    Carstein Wachter's diploma thesis
 
-
 #include "kdtree.h"
 #include "float.h"
 #include "kdnode.h"
 #include "kdnode.h"
 #include "utils.h"
+#include "mailbox.h"
+
+static mailbox<128> mbox;
 
 using namespace std;
 
@@ -66,11 +68,9 @@ void kdtree::draw(scene& scene, ray& ray, hit& hit)
                                 _mm_prefetch((char*)&scene._accels[t2], _MM_HINT_T0);
 
                                 //mailboxing
-                                if (scene._accels[t].pad1 == rayid)
-                                        continue;
-
-                                scene._accels[t].intersect(t, ray, hit);
-                                scene._accels[t].pad1 = rayid;
+                                if (mbox.find(scene, rayid, t)) continue;
+                                scene.intersect(t, ray, hit);
+                                mbox.add(scene, rayid, t);
                         }
 
                         if (ray.tfar < texit) return;

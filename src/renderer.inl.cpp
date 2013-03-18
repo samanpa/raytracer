@@ -136,11 +136,11 @@ void renderer<T>::drawTile(canvas& canvas
         hit4 h[N];
         makeRays<SQRTN>(leftedge, camera.getLocation(), right, down, i, j
                         , ray, h);
-#if 1
+#if 0
         for (unsigned k = 0; k < N; ++k)
-                _accel.draw1(_scene, ray+k, h+k);
+                _accel.drawBundle<1>(_scene, ray+k, h+k);
 #else
-        _accel.draw<N>(_scene, ray, h);
+        _accel.drawBundle<N>(_scene, ray, h);
 #endif
         _shader.shade(_scene, ray, colors, h, N);
         setColors<SQRTN>(canvas, colors, i, j);
