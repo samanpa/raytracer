@@ -12,7 +12,7 @@
 static mailbox<128> mbox;
 
 template <>
-void kdtreebenthin::drawBundle<1>(scene& scene, ray4* r, hit4* hit4)
+void kdtreebenthin::draw<1>(scene& scene, ray4* r, hit4* hit4)
 {
         unsigned int signx = movemask(r->D().x());
         unsigned int signy = movemask(r->D().y());
