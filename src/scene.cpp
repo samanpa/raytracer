@@ -9,3 +9,12 @@ bool scene::addFace(size_t v0, size_t v1, size_t v2) {
         _triangles.emplace_back(v0, v1, v2);
         return true;
 }
+
+void scene::postProcess() {
+        for (auto &t : _triangles) {
+                _faceNormals.push_back(_normals[t.p0]);
+                _faceNormals.push_back(_normals[t.p1]);
+                _faceNormals.push_back(_normals[t.p2]);
+        }
+        _normals.clear();
+}

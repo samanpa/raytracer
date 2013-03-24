@@ -13,7 +13,9 @@ public:
 		{}
 	
         void getBounds(const scene& scene, aabb &bb) const;
-        ssef getSmoothNormal(const scene& scene, float v, float w) const;
+        
+        static
+        ssef getSmoothNormal(uint32_t t, const scene& scene, float v, float w);
 
 	const int p0;
 	const int p1;

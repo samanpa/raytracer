@@ -103,7 +103,7 @@ static void parseMesh(scene& scene) {
 		case FACES:    parseFaces(scene); break;
 		case NORMALS:  parseNormals(scene); break;
 		case MATERIAL: parseMaterial(scene); break;
-		case RBRACE:   return;
+		case RBRACE:   scene.postProcess(); return;
 		default:
 			stringstream str;
 			str << "expecting vertex/face " << token;
@@ -121,4 +121,5 @@ bool parsePov (char *filename, scene& scene) {
 	case MESH: parseMesh(scene); break;
 	default: throw parse_error("Error while parsing file ");
 	};
+        return true;
 }

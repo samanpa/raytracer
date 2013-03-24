@@ -6,8 +6,9 @@ void shader::shade(scene& scene
                    , hit& hit)
 {
 	if (hit.prim != -1) {
-#if 1
-                ssef normal = scene.getTriangles()[hit.prim].getSmoothNormal(scene, hit.u, hit.v);
+                ssef normal = triangle::getSmoothNormal(hit.prim, scene, hit.u, hit.v);
+
+#if 0
                 ssef dir(ray.D().x(), ray.D().y(), ray.D().z(), 0.0);
                 ssef dp = _mm_dp_ps(dir, normal, 0x77);
                 float phong = -dp[0];

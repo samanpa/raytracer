@@ -66,7 +66,7 @@ static void splitVoxel(const aabb& voxel, int axis, float split, aabb& left, aab
 }
 
 static const int INTERSECT_COST = 50;
-static const int TRAVERSAL_COST = 80;
+static const int TRAVERSAL_COST = 100;
 
 static void sah(int nl, int nr, int np, float pl, float pr, float& cost, splitside &side)
 {

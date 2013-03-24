@@ -81,7 +81,6 @@ void kdtreebenthin::draw<N>(scene& scene, ray4* r, hit4* h)
                                 dnear |= (movemask(tnear[i] <= t[i]) << shift);
                                 dfar  |= (movemask(tfar[i]  >= t[i]) << shift);
                         }
-                        
                         currNode   = _nodes + back;
                         if ((activemask & dnear) == 0) continue;
 

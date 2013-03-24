@@ -4,7 +4,7 @@ bin_PROGRAMS	= banna
 lib_LIBRARIES	= libbp_ray.a
 
 common_CXXFLAGS = -g -Wall -pedantic -O3 -pipe -march=native \
-	-std=gnu++0x -Wno-strict-aliasing -pipe
+	-std=gnu++0x -Wno-strict-aliasing -pipe -flto -fwhole-program
 
 CLEANFILES              =  lexer.cc 
 
@@ -20,4 +20,4 @@ libbp_ray_a_SOURCES	= lexer.ll parser.cpp io.cpp \
 banna_CXXFLAGS 		= $(common_CXXFLAGS)
 banna_SOURCES 		= banna.cpp
 banna_LDADD 		= libbp_ray.a
-banna_LDFLAGS 		= -lgd -lGL -lglut
+banna_LDFLAGS 		= -lgd -lGL -lglut -flto -fwhole-program

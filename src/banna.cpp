@@ -11,10 +11,13 @@ using namespace std;
 
 static renderer<kdtreebenthin> *arenderer;
 void drawit (canvas &canvas) {
+        static int count = 0;
         ticks start = getticks();
-        arenderer->drawBundle<1>(canvas);
+        arenderer->drawBundle<2>(canvas);
         ticks end = getticks();
         INFO( "Cycles per ray " << (end - start) / arenderer->getRayCount());
+        if (++count == 200)
+                exit(0);
 }
 
 

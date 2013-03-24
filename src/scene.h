@@ -11,12 +11,13 @@
 
 class scene {
 	camera _camera;
-	std::vector<vec3f>    _vertices;
-	std::vector<ssef>    _normals;
-	std::vector<triangle> _triangles;
+        std::vector<ssef>     _faceNormals;
+        std::vector<triangle> _triangles;
+        std::vector<vec3f>    _vertices;
+        std::vector<ssef>     _normals;
 
 public:
-	std::vector<triangle_barycentric> _accels;
+        std::vector<triangle_barycentric> _accels;
 
 public:
 	camera& getCamera() { return _camera; }
@@ -28,10 +29,12 @@ public:
         const vec3f& getVertex(size_t id) const { return _vertices[id]; }
 	const std::vector<vec3f>& getVertices() const { return _vertices; }
 
+        void postProcess();
+
         void addNormal(vec3f& n) { 
                 _normals.push_back(ssef(n.x(), n.y(), n.z(), 0.f));
         }
-        const ssef& getNormal(size_t v) const { return _normals[v]; }
+        const ssef& getFaceNormal(uint32_t t, uint32_t n) const { return _faceNormals[t*3+n];}
 
 	bool addFace(size_t v0, size_t v1, size_t v2);
         
