@@ -8,7 +8,7 @@ void shader::shade(scene& scene
 	if (hit.prim != -1) {
                 ssef normal = triangle::getSmoothNormal(hit.prim, scene, hit.u, hit.v);
 
-#if 0
+#if 1
                 ssef dir(ray.D().x(), ray.D().y(), ray.D().z(), 0.0);
                 ssef dp = _mm_dp_ps(dir, normal, 0x77);
                 float phong = -dp[0];
@@ -32,7 +32,6 @@ void shader::shade(scene &scene
                 for (unsigned j = 0; j < 4; ++j) {
                         vec3f d(r4[i].D().x()[j], r4[i].D().y()[j], r4[i].D().z()[j]);
                         ray ray(r4[i].O(), d);
-                        // INFO(hit4[i].prim);
                         hit h;
                         
                         h.v    = hit4[i].v[j];

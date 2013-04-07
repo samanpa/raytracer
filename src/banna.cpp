@@ -9,15 +9,19 @@
 
 using namespace std;
 
-static renderer<kdtreebenthin> *arenderer;
+typedef renderer<kdtreebenthin, 2> renderer_type;
+
+static renderer_type *arenderer;
 void drawit (canvas &canvas) {
-        static int count = 0;
         ticks start = getticks();
-        arenderer->drawBundle<2>(canvas);
+        arenderer->drawThreaded(canvas);
         ticks end = getticks();
         INFO( "Cycles per ray " << (end - start) / arenderer->getRayCount());
+#if 0
+        static int count = 0;
         if (++count == 200)
                 exit(0);
+#endif
 }
 
 
@@ -39,7 +43,7 @@ int main(int argc, char **argv, char **environ) {
                 else {
                         try {
                                 parsePov(argv[i], scene);
-                                arenderer = new renderer<kdtreebenthin>(scene);
+                                arenderer = new renderer_type(scene);
                         }
                         catch (parse_error& pe) {
                                 cerr << "Could not parse " << argv[1]

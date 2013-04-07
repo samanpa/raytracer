@@ -12,12 +12,12 @@ struct statistic {
                 cnt = 0;
         }
 	void inc(uint64_t val) {
-		this->val += val;
-		++this->cnt;
+		__sync_add_and_fetch(&this->cnt, 1);
+		__sync_add_and_fetch(&this->val, val);
 	}
 	void inc(uint64_t val, int cnt) {
-		this->val += val;
-		this->cnt += cnt;
+		__sync_add_and_fetch(&this->cnt, cnt);
+		__sync_add_and_fetch(&this->val, val);
 	}
 };
 

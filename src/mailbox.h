@@ -50,7 +50,7 @@ struct mailbox {
                 ssef trissef = _mm_castsi128_ps(_mm_set1_epi32(tri));
                 ssef tmp1 = m128[0] == trissef;
                 ssef tmp2 = m128[1] == trissef;
-                int res = (_mm_movemask_ps(tmp1) | _mm_movemask_ps(tmp2));
+                int res = _mm_movemask_ps(tmp1) | _mm_movemask_ps(tmp2);
                 return res;
         }
 };

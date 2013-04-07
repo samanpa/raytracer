@@ -15,7 +15,7 @@ libbp_ray_a_SOURCES	= lexer.ll parser.cpp io.cpp \
 	kdtreebuilder.cpp kdtree.cpp \
 	kdtreetraversal.cpp kdtreetraversalwachter.cpp \
 	kdtreetraversalbenthin.cpp kdtreebundletraversalbenthin.cpp \
-	shader.cpp canvas.cpp scene.cpp ui.cpp
+	shader.cpp canvas.cpp scene.cpp ui.cpp jobmanager.cpp
 
 banna_CXXFLAGS 		= $(common_CXXFLAGS)
 banna_SOURCES 		= banna.cpp

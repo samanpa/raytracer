@@ -7,20 +7,18 @@
 #include "kdtree.h"
 #include "noaccel.h"
 #include "shader.h"
+#include "jobmanager.h"
 
 class scene;
 class canvas;
 
-template <class T>
+template <class T, int SQRTN>
 struct renderer {
-        renderer(scene &scene) 
-                : _scene(scene)
-                , _accel(scene) {}
+        renderer(scene &scene);
 
         void draw(canvas& canvas);
-
-        template<int SQRTN>
-        void drawBundle(canvas& canvas);
+        void draw4(canvas& canvas);
+        void drawThreaded(canvas& canvas);
 
         const uint64_t getRayCount() const { return _rayCount.val; }
 private:
@@ -29,14 +27,15 @@ private:
         shader _shader;
 	statistic _intersectCost;
 	statistic _rayCount;
+        jobmanager _jobmanager;
 
-        template <int SQRTN>
-        void drawTile(canvas& canvas
+        void drawTile(color* colors
                       , const vec3<ssef>& pos
                       , const vec3<ssef>& right
                       , const vec3<ssef>& down
                       , unsigned i, unsigned j);
-       
+
+        static void *renderThread(void *tid);
 };
 
 #include "renderer.inl.cpp"

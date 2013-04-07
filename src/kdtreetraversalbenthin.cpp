@@ -14,6 +14,7 @@ static mailbox<128> mbox;
 template <>
 void kdtreebenthin::draw<1>(scene& scene, ray4* r, hit4* hit4)
 {
+
         unsigned int signx = movemask(r->D().x());
         unsigned int signy = movemask(r->D().y());
         unsigned int signz = movemask(r->D().z());
@@ -58,8 +59,10 @@ void kdtreebenthin::draw<1>(scene& scene, ray4* r, hit4* hit4)
         kdnode* currNode = _nodes + 1;
 
         int activemask = 0xF;
+#if MAILBOX
         static uint64_t rayid = 0;
-        ++rayid;
+        __sync_add_and_fetch(&rayid, 1);
+#endif
         while (true) {
                 if (!currNode->isLeaf()) {
                         const int axis  = currNode->getAxis();
@@ -90,10 +93,14 @@ void kdtreebenthin::draw<1>(scene& scene, ray4* r, hit4* hit4)
                                 //prefetch
                                 int t2 = _prims[primidx + i + 1];
                                 _mm_prefetch((char*)&scene._accels[t2], _MM_HINT_T0);
+#if MAILBOX
                                 //mailboxing
                                 if (mbox.find(scene, rayid, t)) continue;
+#endif
                                 scene.intersect(t, *r, *hit4);
+#if MAILBOX
                                 mbox.add(scene, rayid, t);
+#endif
                         }
 
                         if (movemask(tfar < r->tfar) == 0) return;

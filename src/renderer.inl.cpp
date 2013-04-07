@@ -7,8 +7,23 @@
 #include "simdv.h"
 #include "utils.h"
 #include "color.h"
+#include "unistd.h"
+#include <pthread.h>
 
-using namespace std;
+template <class T, int SQRTN>
+renderer<T, SQRTN>::renderer(scene &scene) 
+        : _scene(scene)
+        , _accel(scene) {
+        for (unsigned i  = 0; i <_jobmanager.getNumThreads(); ++i) {
+                pthread_t tid;
+                auto job = &_jobmanager.getJob(i);
+                job->setArg(this);
+                pthread_create(&tid
+                               , NULL
+                               , renderThread
+                               , job);
+        }
+}
 
 static void setColors1x1(canvas& canvas, color* colors, unsigned i, unsigned j)
 {
@@ -63,8 +78,8 @@ static void getDownRight(const scene &scene, const canvas &canvas,
 	right= left * -leftstep;
 }
 
-template <class T>
-void renderer<T>::draw(canvas& canvas)
+template <class T, int SQRTN>
+void renderer<T, SQRTN>::draw(canvas& canvas)
 {
 	vec3f down, right, lefttop;
 	getDownRight(_scene, canvas, down, right, lefttop);
@@ -88,6 +103,8 @@ void renderer<T>::draw(canvas& canvas)
 	}
 }
 
+#include <unistd.h>
+
 
 template <int SQRTN>
 inline void makeRays(const vec3<ssef>& oleftedge
@@ -96,8 +113,7 @@ inline void makeRays(const vec3<ssef>& oleftedge
                      , const vec3<ssef>& down
                      , const unsigned i
                      , const unsigned j
-                     , ray4 *ray
-                     , hit4 *h)
+                     , ray4 *ray)
 {
 	vec3<ssef> loc   = makeSimdVec(cameraLoc);
         vec3<ssef> leftedge(oleftedge);
@@ -119,55 +135,107 @@ inline void makeRays(const vec3<ssef>& oleftedge
                 leftedge += down;
         }
 }
-                            
-//N == number of bundles
-template <class T>
-template <int SQRTN>
-void renderer<T>::drawTile(canvas& canvas
-                           , const vec3<ssef>& leftedge
-                           , const vec3<ssef>& right
-                           , const vec3<ssef>& down
-                           , unsigned i, unsigned j)
+
+template <class T, int SQRTN>
+void renderer<T,SQRTN>::drawTile(color *colors
+                                 , const vec3<ssef>& leftedge
+                                 , const vec3<ssef>& right
+                                 , const vec3<ssef>& down
+                                 , unsigned i, unsigned j)
+{
+        static const unsigned N = SQRTN * SQRTN;
+        ray4 ray[N];
+        hit4 hit[N];
+        _rayCount.inc(4 * N);
+        makeRays<SQRTN>(leftedge
+                        , _scene.getCamera().getLocation()
+                        , right, down, i, j, ray);
+#if 1
+        for (unsigned k = 0; k < N; ++k)
+                _accel.template draw<1>(_scene, ray+k, hit+k);
+#else
+        _accel.template draw<N>(_scene, ray, hit);
+#endif
+        _shader.shade(_scene, ray, colors, hit, N);
+}
+
+static canvas* gcanvas;
+static vec3f downf, rightf, lefttopf;
+static vec3<ssef> lefttop, down, right, leftedge;
+static int tileNumber;
+
+template <class T, int SQRTN>
+void renderer<T,SQRTN>::draw4(canvas& canvas)
 {
         static const unsigned N = SQRTN * SQRTN;
         color colors[4*N];
-        auto& camera = _scene.getCamera();
-        ray4 ray[N];
-        hit4 h[N];
-        makeRays<SQRTN>(leftedge, camera.getLocation(), right, down, i, j
-                        , ray, h);
-#if 1
-        for (unsigned k = 0; k < N; ++k)
-                _accel.template draw<1>(_scene, ray+k, h+k);
-#else
-        _accel.template draw<N>(_scene, ray, h);
-#endif
-        _shader.shade(_scene, ray, colors, h, N);
-        setColors<SQRTN>(canvas, colors, i, j);
-        _rayCount.inc(4 * N);
-}
-
-template <class T>
-template <int SQRTN>
-void renderer<T>::drawBundle(canvas& canvas)
-{
-	vec3f downf, rightf, lefttopf;
 	getDownRight(_scene, canvas, downf, rightf, lefttopf);
-	vec3<ssef> lefttop = makeSimdVec(lefttopf
-					 , lefttopf + rightf
-					 , lefttopf + downf
-					 , lefttopf + rightf + downf);
-	vec3<ssef> down  = makeSimdVec(downf + downf);
-	vec3<ssef> right = makeSimdVec(rightf + rightf);
-	vec3<ssef> leftedge (lefttop);
+	lefttop = makeSimdVec(lefttopf
+                              , lefttopf + rightf
+                              , lefttopf + downf
+                              , lefttopf + rightf + downf);
+        down  = makeSimdVec(downf + downf);
+        right = makeSimdVec(rightf + rightf);
+        leftedge = lefttop;
         _rayCount.reset();
 
-	for (int i = 0; i < canvas.getHeight() ; i += 2 * SQRTN) {
-		for (int j = 0; j < canvas.getWidth(); j += 2 * SQRTN) {
-                        drawTile<SQRTN>(canvas
-                                        , leftedge, right, down
-                                        , i, j);
+	for (int h = 0; h < canvas.getHeight() ; h += 2 * SQRTN) {
+		for (int w = 0; w < canvas.getWidth(); w += 2 * SQRTN) {
+                        drawTile(colors
+                                 , leftedge, right, down
+                                 , h, w);
+                        setColors<SQRTN>(canvas, colors, h, w);
 		}
 	}
+}
+
+template <class T, int SQRTN>
+void *renderer<T, SQRTN>::renderThread(void *vjob) { 
+        static const unsigned N = SQRTN * SQRTN;
+        color colors[4*N];
+        auto j = (job*)vjob;
+        auto& mgr = j->getManager();
+        mgr.registerThread(j);
+        auto r = (renderer<T, SQRTN>*)j->getArg();
+
+        while (1) {
+                j->wait();
+                while (1) {
+                        if (tileNumber <= 0) {
+                                mgr.threadDone(j->getId());
+                                break;
+                        }
+                        int tile = __sync_sub_and_fetch(&tileNumber, 4*N);
+                        if (tile >= 0) {
+                                tile /= 4*N;
+                                int h = tile / (gcanvas->getWidth()/2/SQRTN);
+                                int w = tile % (gcanvas->getWidth()/2/SQRTN);
+                                h = h * 2 * SQRTN;
+                                w = w * 2 * SQRTN;
+                                r->drawTile(colors
+                                            , leftedge, right, down
+                                            , h, w);
+                                setColors<SQRTN>(*gcanvas, colors, h, w);
+                        }
+                }
+        }
+        return NULL;
+}
+
+template <class T, int SQRTN>
+void renderer<T, SQRTN>::drawThreaded(canvas& canvas)
+{
+        tileNumber = canvas.getHeight() * canvas.getWidth();
+	getDownRight(_scene, canvas, downf, rightf, lefttopf);
+	lefttop = makeSimdVec(lefttopf
+                              , lefttopf + rightf
+                              , lefttopf + downf
+                              , lefttopf + rightf + downf);
+        down  = makeSimdVec(downf + downf);
+	right = makeSimdVec(rightf + rightf);
+	leftedge = lefttop;
+        _rayCount.reset();
+        gcanvas = &canvas;
+        _jobmanager.runJobs();
 }
 
